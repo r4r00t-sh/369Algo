@@ -111,9 +111,21 @@ const CategoryTab = styled.button<{ active: boolean }>`
 
 const NewsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: ${({ theme }) => theme.spacing.lg};
   margin-bottom: ${({ theme }) => theme.spacing.xl};
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+  
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+  
+  @media (min-width: 1600px) {
+    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+  }
 `;
 
 const NewsCard = styled.div`
@@ -257,6 +269,28 @@ const RefreshButton = styled.button`
   }
 `;
 
+const LoadMoreContainer = styled.div`
+  text-align: center;
+  padding: ${({ theme }) => theme.spacing.lg};
+  margin-top: ${({ theme }) => theme.spacing.lg};
+`;
+
+const LoadMoreButton = styled.button`
+  padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.lg};
+  background: ${({ theme }) => theme.colors.primary};
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  font-size: ${({ theme }) => theme.typography.fontSizes.md};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.fast};
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.primaryHover};
+  }
+`;
+
 const News: React.FC = () => {
   const { user } = useAuth();
   const [news, setNews] = useState<NewsArticle[]>([]);
@@ -265,6 +299,8 @@ const News: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [currentLimit, setCurrentLimit] = useState<number>(50);
 
   // Default categories if API fails
   const defaultCategories = {
@@ -301,15 +337,16 @@ const News: React.FC = () => {
       setError('');
       
       // Special handling for Indian markets
-      let endpoint = `/api/news/latest?category=${category}&limit=20`;
+      let endpoint = `/api/news/latest?category=${category}&limit=${currentLimit}`;
       if (category === 'indian-markets') {
-        endpoint = '/api/news/indian-markets?limit=20';
+        endpoint = `/api/news/indian-markets?limit=${currentLimit}`;
       } else if (category === 'global-markets') {
-        endpoint = '/api/news/global-markets?limit=20';
+        endpoint = `/api/news/global-markets?limit=${currentLimit}`;
       }
       
       const response = await api.get(endpoint);
       setNews(response.data.news || response.data.news || []);
+      setHasMore(response.data.hasMore || false);
     } catch (error) {
       console.error('Error fetching news:', error);
       setError('Failed to fetch news. Please try again later.');
@@ -324,8 +361,9 @@ const News: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await api.get(`/api/news/search?query=${encodeURIComponent(searchQuery)}&category=${selectedCategory}&limit=20`);
+      const response = await api.get(`/api/news/search?query=${encodeURIComponent(searchQuery)}&category=${selectedCategory}&limit=${currentLimit}`);
       setNews(response.data.news);
+      setHasMore(response.data.hasMore || false);
     } catch (error) {
       console.error('Error searching news:', error);
       setError('Failed to search news');
@@ -337,11 +375,37 @@ const News: React.FC = () => {
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setSearchQuery('');
+    setCurrentLimit(50); // Reset limit when category changes
+    setHasMore(true); // Reset hasMore when category changes
   };
 
   const handleRefresh = () => {
     setError('');
     fetchNews(selectedCategory);
+  };
+
+  const handleLoadMore = async () => {
+    try {
+      setLoading(true);
+      const newLimit = currentLimit + 25;
+      setCurrentLimit(newLimit);
+      
+      let endpoint = `/api/news/latest?category=${selectedCategory}&limit=${newLimit}`;
+      if (selectedCategory === 'indian-markets') {
+        endpoint = `/api/news/indian-markets?limit=${newLimit}`;
+      } else if (selectedCategory === 'global-markets') {
+        endpoint = `/api/news/global-markets?limit=${newLimit}`;
+      }
+      
+      const response = await api.get(endpoint);
+      setNews(response.data.news || []);
+      setHasMore(response.data.hasMore || false);
+    } catch (error) {
+      console.error('Error loading more news:', error);
+      setError('Failed to load more news');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatTimeAgo = (publishedAt: string) => {
@@ -455,6 +519,14 @@ const News: React.FC = () => {
             </NewsCard>
           ))}
         </NewsGrid>
+      )}
+
+      {!loading && !error && hasMore && (
+        <LoadMoreContainer>
+          <LoadMoreButton onClick={handleLoadMore}>
+            Load More News
+          </LoadMoreButton>
+        </LoadMoreContainer>
       )}
 
       {!loading && !error && news.length === 0 && (

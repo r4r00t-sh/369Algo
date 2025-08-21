@@ -40,7 +40,7 @@ class NewsService:
             "banking": "Banking & Finance"
         }
     
-    async def get_latest_financial_news(self, category: str = "business", limit: int = 20) -> List[Dict[str, Any]]:
+    async def get_latest_financial_news(self, category: str = "business", limit: int = 50) -> List[Dict[str, Any]]:
         """Get latest financial news from multiple sources"""
         try:
             # Check cache first
@@ -151,6 +151,7 @@ class NewsService:
         try:
             # This is a fallback with curated financial news sources
             curated_news = [
+                # Market Updates
                 {
                     "title": "Global Markets Update: Major indices show mixed performance",
                     "description": "Global stock markets displayed mixed performance as investors weigh economic data and central bank policies.",
@@ -158,8 +159,31 @@ class NewsService:
                     "source": "Financial Times",
                     "publishedAt": datetime.utcnow().isoformat(),
                     "category": "markets",
-                    "sentiment": "neutral"
+                    "sentiment": "neutral",
+                    "relevance_score": 0.85
                 },
+                {
+                    "title": "NIFTY 50 and SENSEX: Indian markets show resilience",
+                    "description": "Indian stock markets demonstrate strength with NIFTY 50 and SENSEX maintaining positive momentum.",
+                    "url": "https://example.com/indian-markets",
+                    "source": "Economic Times",
+                    "publishedAt": (datetime.utcnow() - timedelta(hours=1)).isoformat(),
+                    "category": "markets",
+                    "sentiment": "positive",
+                    "relevance_score": 0.90
+                },
+                {
+                    "title": "US Markets: S&P 500 and NASDAQ performance analysis",
+                    "description": "US equity markets show mixed signals as tech stocks face pressure while value stocks gain.",
+                    "url": "https://example.com/us-markets",
+                    "source": "Wall Street Journal",
+                    "publishedAt": (datetime.utcnow() - timedelta(hours=2)).isoformat(),
+                    "category": "markets",
+                    "sentiment": "neutral",
+                    "relevance_score": 0.88
+                },
+                
+                # Technology News
                 {
                     "title": "Tech Sector Earnings: Major companies report strong Q4 results",
                     "description": "Technology companies continue to show resilience with strong quarterly earnings despite market volatility.",
@@ -167,8 +191,21 @@ class NewsService:
                     "source": "Reuters",
                     "publishedAt": (datetime.utcnow() - timedelta(hours=1)).isoformat(),
                     "category": "technology",
-                    "sentiment": "positive"
+                    "sentiment": "positive",
+                    "relevance_score": 0.92
                 },
+                {
+                    "title": "AI and Machine Learning: Transforming financial services",
+                    "description": "Artificial intelligence continues to revolutionize trading and investment strategies across global markets.",
+                    "url": "https://example.com/ai-finance",
+                    "source": "TechCrunch",
+                    "publishedAt": (datetime.utcnow() - timedelta(hours=3)).isoformat(),
+                    "category": "technology",
+                    "sentiment": "positive",
+                    "relevance_score": 0.87
+                },
+                
+                # Economic News
                 {
                     "title": "Central Bank Policy: Fed signals potential rate adjustments",
                     "description": "Federal Reserve officials indicate possible policy adjustments based on economic indicators.",
@@ -176,8 +213,21 @@ class NewsService:
                     "source": "Bloomberg",
                     "publishedAt": (datetime.utcnow() - timedelta(hours=2)).isoformat(),
                     "category": "economy",
-                    "sentiment": "neutral"
+                    "sentiment": "neutral",
+                    "relevance_score": 0.89
                 },
+                {
+                    "title": "RBI Policy: Indian central bank maintains accommodative stance",
+                    "description": "Reserve Bank of India continues supportive monetary policy to boost economic recovery.",
+                    "url": "https://example.com/rbi-policy",
+                    "source": "Business Standard",
+                    "publishedAt": (datetime.utcnow() - timedelta(hours=4)).isoformat(),
+                    "category": "economy",
+                    "sentiment": "positive",
+                    "relevance_score": 0.86
+                },
+                
+                # Cryptocurrency News
                 {
                     "title": "Cryptocurrency Markets: Bitcoin shows recovery signs",
                     "description": "Digital asset markets show signs of recovery as institutional adoption continues to grow.",
@@ -185,8 +235,21 @@ class NewsService:
                     "source": "CoinDesk",
                     "publishedAt": (datetime.utcnow() - timedelta(hours=3)).isoformat(),
                     "category": "crypto",
-                    "sentiment": "positive"
+                    "sentiment": "positive",
+                    "relevance_score": 0.84
                 },
+                {
+                    "title": "DeFi Innovation: Decentralized finance gains traction",
+                    "description": "Decentralized finance protocols continue to attract institutional and retail investors.",
+                    "url": "https://example.com/defi-innovation",
+                    "source": "CoinTelegraph",
+                    "publishedAt": (datetime.utcnow() - timedelta(hours=5)).isoformat(),
+                    "category": "crypto",
+                    "sentiment": "positive",
+                    "relevance_score": 0.82
+                },
+                
+                # Commodities News
                 {
                     "title": "Oil Prices: Crude oil markets face supply-demand dynamics",
                     "description": "Oil markets navigate complex supply-demand dynamics with geopolitical factors in play.",
@@ -194,13 +257,53 @@ class NewsService:
                     "source": "MarketWatch",
                     "publishedAt": (datetime.utcnow() - timedelta(hours=4)).isoformat(),
                     "category": "commodities",
-                    "sentiment": "neutral"
+                    "sentiment": "neutral",
+                    "relevance_score": 0.83
+                },
+                {
+                    "title": "Gold and Silver: Precious metals show safe-haven appeal",
+                    "description": "Gold and silver prices demonstrate strength as investors seek safe-haven assets.",
+                    "url": "https://example.com/precious-metals",
+                    "source": "Kitco",
+                    "publishedAt": (datetime.utcnow() - timedelta(hours=6)).isoformat(),
+                    "category": "commodities",
+                    "sentiment": "positive",
+                    "relevance_score": 0.81
+                },
+                
+                # Banking and Finance
+                {
+                    "title": "Digital Banking: Fintech revolution continues",
+                    "description": "Traditional banks face increasing competition from innovative fintech solutions.",
+                    "url": "https://example.com/digital-banking",
+                    "source": "Finextra",
+                    "publishedAt": (datetime.utcnow() - timedelta(hours=7)).isoformat(),
+                    "category": "banking",
+                    "sentiment": "positive",
+                    "relevance_score": 0.85
+                },
+                
+                # Real Estate
+                {
+                    "title": "Commercial Real Estate: Office space demand shifts",
+                    "description": "Commercial real estate markets adapt to changing work patterns and hybrid models.",
+                    "url": "https://example.com/commercial-re",
+                    "source": "Commercial Observer",
+                    "publishedAt": (datetime.utcnow() - timedelta(hours=8)).isoformat(),
+                    "category": "realestate",
+                    "sentiment": "neutral",
+                    "relevance_score": 0.78
                 }
             ]
             
             # Filter by category if specified
             if category != "business":
                 curated_news = [news for news in curated_news if news["category"] == category]
+            
+            # Add relevance scores if missing
+            for news in curated_news:
+                if "relevance_score" not in news:
+                    news["relevance_score"] = 0.8
             
             return curated_news[:limit]
             

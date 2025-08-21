@@ -35,7 +35,7 @@ async def get_current_user(
 @router.get("/latest")
 async def get_latest_financial_news(
     category: str = Query("business", description="News category"),
-    limit: int = Query(20, description="Number of news articles to fetch", ge=1, le=100),
+    limit: int = Query(50, description="Number of news articles to fetch", ge=1, le=200),
     current_user: User = Depends(get_current_user)
 ):
     """Get latest financial news by category"""
@@ -57,10 +57,14 @@ async def get_latest_financial_news(
         cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
         cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
         
+        # Check if there might be more news available
+        has_more = len(news) >= limit
+        
         return {
             "category": category,
             "count": len(news),
             "news": news,
+            "hasMore": has_more,
             "timestamp": datetime.now().isoformat()
         }
         
@@ -311,7 +315,7 @@ async def get_breaking_news(
 
 @router.get("/indian-markets")
 async def get_indian_market_news(
-    limit: int = Query(20, description="Number of Indian market news articles", ge=1, le=100),
+    limit: int = Query(50, description="Number of Indian market news articles", ge=1, le=200),
     current_user: User = Depends(get_current_user)
 ):
     """Get specific Indian market news (NSE, BSE, NIFTY, SENSEX)"""
@@ -332,10 +336,14 @@ async def get_indian_market_news(
         cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
         cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
         
+        # Check if there might be more news available
+        has_more = len(news) >= limit
+        
         return {
             "market": "Indian Markets",
             "count": len(news),
             "news": news,
+            "hasMore": has_more,
             "timestamp": datetime.now().isoformat()
         }
         
@@ -344,7 +352,7 @@ async def get_indian_market_news(
 
 @router.get("/global-markets")
 async def get_global_market_news(
-    limit: int = Query(20, description="Number of global market news articles", ge=1, le=100),
+    limit: int = Query(50, description="Number of global market news articles", ge=1, le=200),
     current_user: User = Depends(get_current_user)
 ):
     """Get global market news (US, Europe, Asia markets)"""
@@ -365,10 +373,14 @@ async def get_global_market_news(
         cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
         cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
         
+        # Check if there might be more news available
+        has_more = len(news) >= limit
+        
         return {
             "market": "Global Markets",
             "count": len(news),
             "news": news,
+            "hasMore": has_more,
             "timestamp": datetime.now().isoformat()
         }
         
