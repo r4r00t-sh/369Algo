@@ -1,0 +1,418 @@
+import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
+import { FiSearch, FiTrendingUp, FiClock, FiStar, FiExternalLink } from 'react-icons/fi';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../services/api';
+
+interface NewsArticle {
+  title: string;
+  description: string;
+  url: string;
+  source: string;
+  publishedAt: string;
+  urlToImage?: string;
+  category: string;
+  sentiment: string;
+  relevance_score: number;
+}
+
+interface NewsCategory {
+  [key: string]: string;
+}
+
+const NewsContainer = styled.div`
+  padding: ${({ theme }) => theme.spacing.xl};
+  margin-left: 240px;
+  min-height: 100vh;
+  background: ${({ theme }) => theme.colors.background};
+`;
+
+const Header = styled.div`
+  margin-bottom: ${({ theme }) => theme.spacing.xl};
+`;
+
+const Title = styled.h1`
+  font-size: ${({ theme }) => theme.typography.fontSizes.xxl};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
+  color: ${({ theme }) => theme.colors.text};
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
+`;
+
+const Subtitle = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSizes.lg};
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+const SearchSection = styled.div`
+  margin-bottom: ${({ theme }) => theme.spacing.xl};
+`;
+
+const SearchContainer = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.md};
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
+`;
+
+const SearchInput = styled.input`
+  flex: 1;
+  padding: ${({ theme }) => theme.spacing.md};
+  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  font-size: ${({ theme }) => theme.typography.fontSizes.md};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
+const SearchButton = styled.button`
+  padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.lg};
+  background: ${({ theme }) => theme.colors.primary};
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  font-size: ${({ theme }) => theme.typography.fontSizes.md};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.fast};
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.primaryHover};
+  }
+`;
+
+const CategoryTabs = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.sm};
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
+  overflow-x: auto;
+  padding-bottom: ${({ theme }) => theme.spacing.sm};
+`;
+
+const CategoryTab = styled.button<{ active: boolean }>`
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  background: ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surface};
+  color: ${({ active, theme }) => active ? 'white' : theme.colors.textSecondary};
+  border: 1px solid ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surfaceBorder};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.fast};
+  white-space: nowrap;
+  
+  &:hover {
+    background: ${({ active, theme }) => active ? theme.colors.primaryHover : theme.colors.surfaceHover};
+  }
+`;
+
+const NewsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: ${({ theme }) => theme.spacing.lg};
+  margin-bottom: ${({ theme }) => theme.spacing.xl};
+`;
+
+const NewsCard = styled.div`
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  padding: ${({ theme }) => theme.spacing.lg};
+  transition: all ${({ theme }) => theme.transitions.fast};
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const NewsHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+`;
+
+const NewsTitle = styled.h3`
+  font-size: ${({ theme }) => theme.typography.fontSizes.lg};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
+  color: ${({ theme }) => theme.colors.text};
+  margin: 0;
+  line-height: 1.4;
+  flex: 1;
+  margin-right: ${({ theme }) => theme.spacing.md};
+`;
+
+const NewsMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+`;
+
+const Source = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  color: ${({ theme }) => theme.colors.primary};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+`;
+
+const Time = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  color: ${({ theme }) => theme.colors.textMuted};
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.xs};
+`;
+
+const Sentiment = styled.span<{ sentiment: string }>`
+  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
+  border-radius: ${({ theme }) => theme.borderRadius.small};
+  font-size: ${({ theme }) => theme.typography.fontSizes.xs};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+  background: ${({ sentiment, theme }) => {
+    switch (sentiment) {
+      case 'positive': return theme.colors.success + '20';
+      case 'negative': return theme.colors.error + '20';
+      default: return theme.colors.warning + '20';
+    }
+  }};
+  color: ${({ sentiment, theme }) => {
+    switch (sentiment) {
+      case 'positive': return theme.colors.success;
+      case 'negative': return theme.colors.error;
+      default: return theme.colors.warning;
+    }
+  }};
+`;
+
+const NewsDescription = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSizes.md};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  line-height: 1.6;
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+`;
+
+const NewsActions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const ReadMoreButton = styled.a`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.xs};
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  background: ${({ theme }) => theme.colors.primary};
+  color: white;
+  text-decoration: none;
+  border-radius: ${({ theme }) => theme.borderRadius.small};
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+  transition: all ${({ theme }) => theme.transitions.fast};
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.primaryHover};
+  }
+`;
+
+const RelevanceScore = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.xs};
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
+const LoadingSpinner = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: ${({ theme }) => theme.spacing.xxl};
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
+const ErrorMessage = styled.div`
+  text-align: center;
+  padding: ${({ theme }) => theme.spacing.xl};
+  color: ${({ theme }) => theme.colors.error};
+`;
+
+const News: React.FC = () => {
+  const { user } = useAuth();
+  const [news, setNews] = useState<NewsArticle[]>([]);
+  const [categories, setCategories] = useState<NewsCategory>({});
+  const [selectedCategory, setSelectedCategory] = useState<string>('business');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    fetchCategories();
+    fetchNews(selectedCategory);
+  }, [selectedCategory]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/news/categories');
+      setCategories(response.data.categories);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    }
+  };
+
+  const fetchNews = async (category: string) => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await api.get(`/news/latest?category=${category}&limit=20`);
+      setNews(response.data.news);
+    } catch (err) {
+      setError('Failed to fetch news. Please try again later.');
+      console.error('Error fetching news:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    try {
+      setLoading(true);
+      setError('');
+      const response = await api.get(`/news/search?query=${encodeURIComponent(searchQuery)}&category=${selectedCategory}&limit=20`);
+      setNews(response.data.news);
+    } catch (err) {
+      setError('Failed to search news. Please try again later.');
+      console.error('Error searching news:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setSearchQuery('');
+  };
+
+  const formatTimeAgo = (publishedAt: string) => {
+    const now = new Date();
+    const published = new Date(publishedAt);
+    const diffInHours = Math.floor((now.getTime() - published.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
+
+  const getSentimentLabel = (sentiment: string) => {
+    switch (sentiment) {
+      case 'positive': return 'Bullish';
+      case 'negative': return 'Bearish';
+      default: return 'Neutral';
+    }
+  };
+
+  if (loading && news.length === 0) {
+    return (
+      <NewsContainer>
+        <Header>
+          <Title>Financial News</Title>
+          <Subtitle>Stay updated with the latest market news and insights</Subtitle>
+        </Header>
+        <LoadingSpinner>Loading news...</LoadingSpinner>
+      </NewsContainer>
+    );
+  }
+
+  return (
+    <NewsContainer>
+      <Header>
+        <Title>Financial News</Title>
+        <Subtitle>Stay updated with the latest market news and insights</Subtitle>
+      </Header>
+
+      <SearchSection>
+        <SearchContainer>
+          <SearchInput
+            type="text"
+            placeholder="Search for news articles..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <SearchButton onClick={handleSearch}>
+            <FiSearch />
+          </SearchButton>
+        </SearchContainer>
+
+        <CategoryTabs>
+          {Object.entries(categories).map(([key, label]) => (
+            <CategoryTab
+              key={key}
+              active={selectedCategory === key}
+              onClick={() => handleCategoryChange(key)}
+            >
+              {label}
+            </CategoryTab>
+          ))}
+        </CategoryTabs>
+      </SearchSection>
+
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+
+      {loading && (
+        <LoadingSpinner>Loading news...</LoadingSpinner>
+      )}
+
+      {!loading && !error && (
+        <NewsGrid>
+          {news.map((article, index) => (
+            <NewsCard key={index}>
+              <NewsHeader>
+                <NewsTitle>{article.title}</NewsTitle>
+                <Sentiment sentiment={article.sentiment}>
+                  {getSentimentLabel(article.sentiment)}
+                </Sentiment>
+              </NewsHeader>
+
+              <NewsMeta>
+                <Source>{article.source}</Source>
+                <Time>
+                  <FiClock />
+                  {formatTimeAgo(article.publishedAt)}
+                </Time>
+              </NewsMeta>
+
+              <NewsDescription>{article.description}</NewsDescription>
+
+              <NewsActions>
+                <ReadMoreButton href={article.url} target="_blank" rel="noopener noreferrer">
+                  <FiExternalLink />
+                  Read More
+                </ReadMoreButton>
+                <RelevanceScore>
+                  <FiStar />
+                  {Math.round(article.relevance_score * 100)}%
+                </RelevanceScore>
+              </NewsActions>
+            </NewsCard>
+          ))}
+        </NewsGrid>
+      )}
+
+      {!loading && !error && news.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+          No news articles found. Try adjusting your search or category selection.
+        </div>
+      )}
+    </NewsContainer>
+  );
+};
+
+export default News;

@@ -7,7 +7,8 @@ import {
   FiBarChart, 
   FiBookmark, 
   FiSettings, 
-  FiPieChart
+  FiPieChart,
+  FiFileText
 } from 'react-icons/fi';
 
 const SidebarContainer = styled.div`
@@ -101,6 +102,7 @@ const Sidebar: React.FC = () => {
     { path: '/portfolio', label: 'Portfolio', icon: FiPieChart },
     { path: '/trading', label: 'Trading', icon: FiTrendingUp },
     { path: '/market', label: 'Market Data', icon: FiBarChart },
+    { path: '/news', label: 'News', icon: FiFileText },
     { path: '/watchlist', label: 'Watchlist', icon: FiBookmark },
     { path: '/settings', label: 'Settings', icon: FiSettings },
   ];

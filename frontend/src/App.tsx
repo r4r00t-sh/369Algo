@@ -17,6 +17,7 @@ import Dashboard from './pages/Dashboard';
 import Portfolio from './pages/Portfolio';
 import Trading from './pages/Trading';
 import MarketData from './pages/MarketData';
+import News from './pages/News';
 import Watchlist from './pages/Watchlist';
 import Settings from './pages/Settings';
 
@@ -85,6 +86,14 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       <MarketData />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/news" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <News />
                     </Layout>
                   </ProtectedRoute>
                 } />
