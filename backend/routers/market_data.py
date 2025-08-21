@@ -294,3 +294,206 @@ async def get_trending_stocks(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch trending stocks: {str(e)}")
+
+@router.get("/indian/quote/{symbol}")
+async def get_indian_stock_quote(
+    symbol: str,
+    exchange: str = Query("NSE", description="Exchange: NSE or BSE"),
+    current_user: User = Depends(get_current_user)
+):
+    """Get real-time Indian stock quote from NSE or BSE"""
+    try:
+        market_service = MarketDataService()
+        quote = await market_service.get_indian_stock_quote(symbol, exchange)
+        
+        if "error" in quote:
+            raise HTTPException(status_code=400, detail=quote["error"])
+        
+        # Log user activity
+        user_action = {
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "action": "viewed_indian_stock_quote",
+            "symbol": symbol,
+            "exchange": exchange,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        cache_service.redis_client.lpush(f"user:actions:{current_user.id}", json.dumps(user_action))
+        cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
+        cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
+        
+        return quote
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/indian/indices/nse")
+async def get_nse_indices(
+    current_user: User = Depends(get_current_user)
+):
+    """Get NSE major indices"""
+    try:
+        market_service = MarketDataService()
+        indices = await market_service.get_nse_indices()
+        
+        # Log user activity
+        user_action = {
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "action": "viewed_nse_indices",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        cache_service.redis_client.lpush(f"user:actions:{current_user.id}", json.dumps(user_action))
+        cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
+        cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
+        
+        return {"indices": indices}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/indian/indices/bse")
+async def get_bse_indices(
+    current_user: User = Depends(get_current_user)
+):
+    """Get BSE major indices"""
+    try:
+        market_service = MarketDataService()
+        indices = await market_service.get_bse_indices()
+        
+        # Log user activity
+        user_action = {
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "action": "viewed_bse_indices",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        cache_service.redis_client.lpush(f"user:actions:{current_user.id}", json.dumps(user_action))
+        cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
+        cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
+        
+        return {"indices": indices}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/indian/search")
+async def search_indian_stocks(
+    query: str = Query(..., description="Search query for stock symbol or company name"),
+    exchange: str = Query("NSE", description="Exchange: NSE or BSE"),
+    current_user: User = Depends(get_current_user)
+):
+    """Search for Indian stocks"""
+    try:
+        market_service = MarketDataService()
+        results = await market_service.search_indian_stocks(query, exchange)
+        
+        # Log user activity
+        user_action = {
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "action": "searched_indian_stocks",
+            "query": query,
+            "exchange": exchange,
+            "results_count": len(results),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        cache_service.redis_client.lpush(f"user:actions:{current_user.id}", json.dumps(user_action))
+        cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
+        cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
+        
+        return {"results": results, "query": query, "exchange": exchange}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/indian/market-status")
+async def get_indian_market_status(
+    current_user: User = Depends(get_current_user)
+):
+    """Get Indian market status (open/closed)"""
+    try:
+        market_service = MarketDataService()
+        status = await market_service.get_indian_market_status()
+        
+        # Log user activity
+        user_action = {
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "action": "viewed_indian_market_status",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        cache_service.redis_client.lpush(f"user:actions:{current_user.id}", json.dumps(user_action))
+        cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
+        cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
+        
+        return status
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/indian/popular-stocks")
+async def get_indian_popular_stocks(
+    current_user: User = Depends(get_current_user)
+):
+    """Get popular Indian stocks for quick access"""
+    try:
+        # Popular NSE stocks
+        popular_nse = [
+            "RELIANCE", "TCS", "HDFC", "INFY", "ICICIBANK", 
+            "HINDUNILVR", "ITC", "SBIN", "BHARTIARTL", "KOTAKBANK"
+        ]
+        
+        # Popular BSE stocks
+        popular_bse = [
+            "500325", "532540", "500180", "500209", "532174",
+            "500696", "500875", "500112", "532454", "500247"
+        ]
+        
+        market_service = MarketDataService()
+        
+        # Get quotes for popular stocks
+        nse_quotes = []
+        bse_quotes = []
+        
+        for symbol in popular_nse[:5]:  # Limit to 5 for performance
+            try:
+                quote = await market_service.get_indian_stock_quote(symbol, "NSE")
+                if "error" not in quote:
+                    nse_quotes.append(quote)
+            except:
+                continue
+        
+        for symbol in popular_bse[:5]:  # Limit to 5 for performance
+            try:
+                quote = await market_service.get_indian_stock_quote(symbol, "BSE")
+                if "error" not in quote:
+                    bse_quotes.append(quote)
+            except:
+                continue
+        
+        # Log user activity
+        user_action = {
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "action": "viewed_indian_popular_stocks",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        cache_service.redis_client.lpush(f"user:actions:{current_user.id}", json.dumps(user_action))
+        cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
+        cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
+        
+        return {
+            "nse_popular": nse_quotes,
+            "bse_popular": bse_quotes,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

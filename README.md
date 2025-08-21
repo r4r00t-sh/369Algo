@@ -202,9 +202,11 @@ ALPHA_VANTAGE_API_KEY=your-alpha-vantage-api-key
 3. View trade history and order status
 
 ### Market Data
-1. Search for stocks and companies
-2. View real-time quotes and market information
-3. Access financial news and trending stocks
+1. **Global Markets**: Search for stocks and companies worldwide
+2. **Indian Markets**: Real-time NSE and BSE data with popular stocks
+3. **Real-time Quotes**: Live stock quotes and market information
+4. **Market Indices**: NIFTY 50, SENSEX, and other major indices
+5. **Market Status**: Indian market open/close status with IST timing
 
 ### Watchlist
 1. Add stocks to your personal watchlist
@@ -261,9 +263,17 @@ This will start:
 - `GET /api/portfolio/{id}/holdings` - Get holdings
 
 ### Market Data
-- `GET /api/market/quote/{symbol}` - Get stock quote
-- `GET /api/market/search` - Search stocks
+- `GET /api/market/quote/{symbol}` - Get global stock quote
+- `GET /api/market/search` - Search global stocks
 - `GET /api/market/news/{symbol}` - Get stock news
+
+### Indian Markets (NSE/BSE)
+- `GET /api/market/indian/quote/{symbol}` - Get Indian stock quote (NSE/BSE)
+- `GET /api/market/indian/indices/nse` - Get NSE indices (NIFTY 50, etc.)
+- `GET /api/market/indian/indices/bse` - Get BSE indices (SENSEX, etc.)
+- `GET /api/market/indian/search` - Search Indian stocks
+- `GET /api/market/indian/market-status` - Get Indian market status
+- `GET /api/market/indian/popular-stocks` - Get popular Indian stocks
 
 ### Watchlist
 - `POST /api/watchlist/add` - Add to watchlist
