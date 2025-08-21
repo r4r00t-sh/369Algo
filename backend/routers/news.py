@@ -308,3 +308,69 @@ async def get_breaking_news(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/indian-markets")
+async def get_indian_market_news(
+    limit: int = Query(20, description="Number of Indian market news articles", ge=1, le=100),
+    current_user: User = Depends(get_current_user)
+):
+    """Get specific Indian market news (NSE, BSE, NIFTY, SENSEX)"""
+    try:
+        news_service = NewsService()
+        news = await news_service.get_indian_market_news(limit)
+        
+        # Log user activity
+        user_action = {
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "action": "viewed_indian_market_news",
+            "limit": limit,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        cache_service.redis_client.lpush(f"user:actions:{current_user.id}", json.dumps(user_action))
+        cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
+        cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
+        
+        return {
+            "market": "Indian Markets",
+            "count": len(news),
+            "news": news,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/global-markets")
+async def get_global_market_news(
+    limit: int = Query(20, description="Number of global market news articles", ge=1, le=100),
+    current_user: User = Depends(get_current_user)
+):
+    """Get global market news (US, Europe, Asia markets)"""
+    try:
+        news_service = NewsService()
+        news = await news_service.get_global_market_news(limit)
+        
+        # Log user activity
+        user_action = {
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "action": "viewed_global_market_news",
+            "limit": limit,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        cache_service.redis_client.lpush(f"user:actions:{current_user.id}", json.dumps(user_action))
+        cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
+        cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
+        
+        return {
+            "market": "Global Markets",
+            "count": len(news),
+            "news": news,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

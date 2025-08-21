@@ -73,32 +73,29 @@ class NewsService:
             return []
     
     async def _fetch_from_news_api(self, category: str, limit: int) -> List[Dict[str, Any]]:
-        """Fetch news from News API"""
+        """Fetch news from News API with enhanced queries for Indian markets"""
         try:
-            # Map our categories to News API categories
-            category_map = {
-                "business": "business",
-                "markets": "business",
-                "economy": "business",
-                "technology": "technology",
-                "crypto": "business",
-                "commodities": "business",
-                "realestate": "business",
-                "banking": "business"
+            # Enhanced queries for better Indian market coverage
+            query_map = {
+                "business": "finance OR business OR markets OR economy OR stocks OR trading",
+                "markets": "stock market OR NIFTY OR SENSEX OR NSE OR BSE OR trading OR investors",
+                "economy": "economy OR GDP OR inflation OR RBI OR Fed OR ECB OR central bank",
+                "technology": "technology AND (finance OR business OR markets OR stocks)",
+                "crypto": "cryptocurrency OR bitcoin OR ethereum OR blockchain OR crypto markets",
+                "commodities": "oil OR gold OR silver OR commodities OR natural resources",
+                "realestate": "real estate OR property OR housing OR construction OR REITs",
+                "banking": "banking OR banks OR financial institutions OR RBI OR Fed"
             }
             
-            api_category = category_map.get(category, "business")
+            # Build enhanced query
+            base_query = query_map.get(category, query_map["business"])
             
-            # Build query for financial news
-            query = "finance OR business OR markets OR economy OR stocks OR trading"
-            if category == "technology":
-                query = "technology AND (finance OR business OR markets)"
-            elif category == "crypto":
-                query = "cryptocurrency OR bitcoin OR ethereum OR blockchain"
+            # Add Indian market specific terms for relevant categories
+            if category in ["markets", "business", "economy"]:
+                base_query += " OR India OR Indian OR NSE OR BSE OR NIFTY OR SENSEX"
             
             params = {
-                "q": query,
-                "category": api_category,
+                "q": base_query,
                 "language": "en",
                 "sortBy": "publishedAt",
                 "pageSize": min(limit, 100),
@@ -427,6 +424,78 @@ class NewsService:
     async def get_news_categories(self) -> Dict[str, str]:
         """Get available news categories"""
         return self.categories
+    
+    async def get_indian_market_news(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """Get specific Indian market news"""
+        try:
+            cache_key = f"indian_market_news_{limit}"
+            cached_data = self._get_cached_data(cache_key)
+            if cached_data:
+                return cached_data
+            
+            if self.news_api_key:
+                # Specific query for Indian markets
+                params = {
+                    "q": "NIFTY OR SENSEX OR NSE OR BSE OR Indian stock market OR Indian markets",
+                    "language": "en",
+                    "sortBy": "publishedAt",
+                    "pageSize": min(limit, 100),
+                    "apiKey": self.news_api_key
+                }
+                
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.get(f"{self.news_api_base}/everything", params=params)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        articles = data.get("articles", [])
+                        
+                        indian_news = self._process_news_api_articles(articles, limit)
+                        self._cache_data(cache_key, indian_news)
+                        return indian_news
+            
+            # Fallback to general market news
+            return await self.get_latest_financial_news("markets", limit)
+            
+        except Exception as e:
+            print(f"Error fetching Indian market news: {e}")
+            return []
+    
+    async def get_global_market_news(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """Get global market news (excluding India)"""
+        try:
+            cache_key = f"global_market_news_{limit}"
+            cached_data = self._get_cached_data(cache_key)
+            if cached_data:
+                return cached_data
+            
+            if self.news_api_key:
+                # Query for global markets
+                params = {
+                    "q": "S&P 500 OR NASDAQ OR Dow Jones OR FTSE OR DAX OR global markets",
+                    "language": "en",
+                    "sortBy": "publishedAt",
+                    "pageSize": min(limit, 100),
+                    "apiKey": self.news_api_key
+                }
+                
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.get(f"{self.news_api_base}/everything", params=params)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        articles = data.get("articles", [])
+                        
+                        global_news = self._process_news_api_articles(articles, limit)
+                        self._cache_data(cache_key, global_news)
+                        return global_news
+            
+            # Fallback to general market news
+            return await self.get_latest_financial_news("markets", limit)
+            
+        except Exception as e:
+            print(f"Error fetching global market news: {e}")
+            return []
     
     def _is_cache_valid(self, key: str) -> bool:
         """Check if cached data is still valid"""

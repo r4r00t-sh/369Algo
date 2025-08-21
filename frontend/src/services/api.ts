@@ -60,6 +60,17 @@ export const endpoints = {
     news: (symbol: string) => `/api/market/news/${symbol}`,
     trending: '/api/market/trending',
   },
+  news: {
+    categories: '/api/news/categories',
+    latest: '/api/news/latest',
+    indianMarkets: '/api/news/indian-markets',
+    globalMarkets: '/api/news/global-markets',
+    stockSpecific: (symbol: string) => `/api/news/stock/${symbol}`,
+    search: '/api/news/search',
+    trending: '/api/news/trending',
+    marketUpdates: '/api/news/market-updates',
+    breaking: '/api/news/breaking',
+  },
   portfolio: {
     create: '/api/portfolio/create',
     list: '/api/portfolio/list',

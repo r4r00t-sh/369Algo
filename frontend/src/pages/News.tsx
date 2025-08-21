@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FiSearch, FiTrendingUp, FiClock, FiStar } from 'react-icons/fi';
+import { FiSearch, FiTrendingUp, FiClock, FiStar, FiRefreshCw } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 
@@ -241,6 +241,22 @@ const ErrorMessage = styled.div`
   color: ${({ theme }) => theme.colors.error};
 `;
 
+const RefreshButton = styled.button`
+  padding: ${({ theme }) => theme.spacing.md};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.fast};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceHover};
+    border-color: ${({ theme }) => theme.colors.surfaceBorder};
+    color: ${({ theme }) => theme.colors.text};
+  }
+`;
+
 const News: React.FC = () => {
   const { user } = useAuth();
   const [news, setNews] = useState<NewsArticle[]>([]);
@@ -250,6 +266,18 @@ const News: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
+  // Default categories if API fails
+  const defaultCategories = {
+    'business': 'Business & Finance',
+    'markets': 'Stock Markets',
+    'indian-markets': 'Indian Markets (NSE/BSE)',
+    'global-markets': 'Global Markets',
+    'economy': 'Economy & Policy',
+    'technology': 'Technology & Innovation',
+    'crypto': 'Cryptocurrency',
+    'commodities': 'Commodities & Oil'
+  };
+
   useEffect(() => {
     fetchCategories();
     fetchNews(selectedCategory);
@@ -257,10 +285,13 @@ const News: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('/news/categories');
-      setCategories(response.data.categories);
-    } catch (err) {
-      console.error('Error fetching categories:', err);
+      const response = await api.get('/api/news/categories');
+      setCategories(response.data.categories || defaultCategories);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Use default categories if API fails
+      setCategories(defaultCategories);
+      setError('Using default news categories');
     }
   };
 
@@ -268,11 +299,20 @@ const News: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await api.get(`/news/latest?category=${category}&limit=20`);
-      setNews(response.data.news);
-    } catch (err) {
+      
+      // Special handling for Indian markets
+      let endpoint = `/api/news/latest?category=${category}&limit=20`;
+      if (category === 'indian-markets') {
+        endpoint = '/api/news/indian-markets?limit=20';
+      } else if (category === 'global-markets') {
+        endpoint = '/api/news/global-markets?limit=20';
+      }
+      
+      const response = await api.get(endpoint);
+      setNews(response.data.news || response.data.news || []);
+    } catch (error) {
+      console.error('Error fetching news:', error);
       setError('Failed to fetch news. Please try again later.');
-      console.error('Error fetching news:', err);
     } finally {
       setLoading(false);
     }
@@ -284,11 +324,11 @@ const News: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await api.get(`/news/search?query=${encodeURIComponent(searchQuery)}&category=${selectedCategory}&limit=20`);
+      const response = await api.get(`/api/news/search?query=${encodeURIComponent(searchQuery)}&category=${selectedCategory}&limit=20`);
       setNews(response.data.news);
-    } catch (err) {
-      setError('Failed to search news. Please try again later.');
-      console.error('Error searching news:', err);
+    } catch (error) {
+      console.error('Error searching news:', error);
+      setError('Failed to search news');
     } finally {
       setLoading(false);
     }
@@ -297,6 +337,11 @@ const News: React.FC = () => {
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setSearchQuery('');
+  };
+
+  const handleRefresh = () => {
+    setError('');
+    fetchNews(selectedCategory);
   };
 
   const formatTimeAgo = (publishedAt: string) => {
@@ -324,6 +369,9 @@ const News: React.FC = () => {
         <Header>
           <Title>Financial News</Title>
           <Subtitle>Stay updated with the latest market news and insights</Subtitle>
+          <RefreshButton onClick={handleRefresh} title="Refresh news">
+            <FiRefreshCw />
+          </RefreshButton>
         </Header>
         <LoadingSpinner>Loading news...</LoadingSpinner>
       </NewsContainer>
@@ -335,6 +383,9 @@ const News: React.FC = () => {
       <Header>
         <Title>Financial News</Title>
         <Subtitle>Stay updated with the latest market news and insights</Subtitle>
+        <RefreshButton onClick={handleRefresh} title="Refresh news">
+          <FiRefreshCw />
+        </RefreshButton>
       </Header>
 
       <SearchSection>
