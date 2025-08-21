@@ -29,6 +29,13 @@ const NewsContainer = styled.div`
 
 const Header = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing.xl};
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+`;
+
+const HeaderContent = styled.div`
+  flex: 1;
 `;
 
 const Title = styled.h1`
@@ -93,6 +100,31 @@ const CategoryTabs = styled.div`
 `;
 
 const CategoryTab = styled.button<{ active: boolean }>`
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  background: ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surface};
+  color: ${({ active, theme }) => active ? 'white' : theme.colors.textSecondary};
+  border: 1px solid ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surfaceBorder};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.fast};
+  white-space: nowrap;
+  
+  &:hover {
+    background: ${({ active, theme }) => active ? theme.colors.primaryHover : theme.colors.surfaceHover};
+  }
+`;
+
+const SentimentFilterTabs = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.sm};
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
+  overflow-x: auto;
+  padding-bottom: ${({ theme }) => theme.spacing.sm};
+`;
+
+const SentimentFilterTab = styled.button<{ active: boolean }>`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   background: ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surface};
   color: ${({ active, theme }) => active ? 'white' : theme.colors.textSecondary};
@@ -261,6 +293,7 @@ const RefreshButton = styled.button`
   cursor: pointer;
   transition: all ${({ theme }) => theme.transitions.fast};
   color: ${({ theme }) => theme.colors.textSecondary};
+  flex-shrink: 0;
   
   &:hover {
     background: ${({ theme }) => theme.colors.surfaceHover};
@@ -291,6 +324,49 @@ const LoadMoreButton = styled.button`
   }
 `;
 
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: ${({ theme }) => theme.spacing.lg};
+  padding: ${({ theme }) => theme.spacing.md};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+`;
+
+const PaginationInfo = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+const PaginationControls = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.xs};
+`;
+
+const PaginationButton = styled.button<{ active?: boolean }>`
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  background: ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surface};
+  color: ${({ active, theme }) => active ? 'white' : theme.colors.text};
+  border: 1px solid ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surfaceBorder};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.fast};
+  white-space: nowrap;
+  
+  &:hover {
+    background: ${({ active, theme }) => active ? theme.colors.primaryHover : theme.colors.surfaceHover};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
 const News: React.FC = () => {
   const { user } = useAuth();
   const [news, setNews] = useState<NewsArticle[]>([]);
@@ -301,6 +377,15 @@ const News: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [currentLimit, setCurrentLimit] = useState<number>(50);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [articlesPerPage] = useState<number>(12);
+  
+  // Sentiment filtering
+  const [selectedSentiment, setSelectedSentiment] = useState<string>('all');
+  const [availableSentiments, setAvailableSentiments] = useState<string[]>(['all', 'positive', 'neutral', 'negative']);
 
   // Default categories if API fails
   const defaultCategories = {
@@ -377,6 +462,8 @@ const News: React.FC = () => {
     setSearchQuery('');
     setCurrentLimit(50); // Reset limit when category changes
     setHasMore(true); // Reset hasMore when category changes
+    setCurrentPage(1); // Reset to first page
+    setSelectedSentiment('all'); // Reset sentiment filter
   };
 
   const handleRefresh = () => {
@@ -408,6 +495,40 @@ const News: React.FC = () => {
     }
   };
 
+  const handleSentimentFilter = (sentiment: string) => {
+    setSelectedSentiment(sentiment);
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const getFilteredAndPaginatedNews = () => {
+    let filteredNews = news;
+    
+    // Apply sentiment filter
+    if (selectedSentiment !== 'all') {
+      filteredNews = news.filter(article => article.sentiment === selectedSentiment);
+    }
+    
+    // Calculate pagination
+    const totalFiltered = filteredNews.length;
+    const totalPages = Math.ceil(totalFiltered / articlesPerPage);
+    setTotalPages(totalPages);
+    
+    // Get current page articles
+    const startIndex = (currentPage - 1) * articlesPerPage;
+    const endIndex = startIndex + articlesPerPage;
+    
+    return {
+      currentPageNews: filteredNews.slice(startIndex, endIndex),
+      totalPages,
+      totalFiltered
+    };
+  };
+
   const formatTimeAgo = (publishedAt: string) => {
     const now = new Date();
     const published = new Date(publishedAt);
@@ -431,8 +552,10 @@ const News: React.FC = () => {
     return (
       <NewsContainer>
         <Header>
-          <Title>Financial News</Title>
-          <Subtitle>Stay updated with the latest market news and insights</Subtitle>
+          <HeaderContent>
+            <Title>Financial News</Title>
+            <Subtitle>Stay updated with the latest market news and insights</Subtitle>
+          </HeaderContent>
           <RefreshButton onClick={handleRefresh} title="Refresh news">
             <FiRefreshCw />
           </RefreshButton>
@@ -445,8 +568,10 @@ const News: React.FC = () => {
   return (
     <NewsContainer>
       <Header>
-        <Title>Financial News</Title>
-        <Subtitle>Stay updated with the latest market news and insights</Subtitle>
+        <HeaderContent>
+          <Title>Financial News</Title>
+          <Subtitle>Stay updated with the latest market news and insights</Subtitle>
+        </HeaderContent>
         <RefreshButton onClick={handleRefresh} title="Refresh news">
           <FiRefreshCw />
         </RefreshButton>
@@ -477,6 +602,20 @@ const News: React.FC = () => {
             </CategoryTab>
           ))}
         </CategoryTabs>
+
+        <SentimentFilterTabs>
+          {availableSentiments.map((sentiment) => (
+            <SentimentFilterTab
+              key={sentiment}
+              active={selectedSentiment === sentiment}
+              onClick={() => handleSentimentFilter(sentiment)}
+            >
+              {sentiment === 'all' ? 'All Sentiments' : 
+               sentiment === 'positive' ? 'Bullish' : 
+               sentiment === 'negative' ? 'Bearish' : 'Neutral'}
+            </SentimentFilterTab>
+          ))}
+        </SentimentFilterTabs>
       </SearchSection>
 
       {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -486,39 +625,75 @@ const News: React.FC = () => {
       )}
 
       {!loading && !error && (
-        <NewsGrid>
-          {news.map((article, index) => (
-            <NewsCard key={index}>
-              <NewsHeader>
-                <NewsTitle>{article.title}</NewsTitle>
-                <Sentiment sentiment={article.sentiment}>
-                  {getSentimentLabel(article.sentiment)}
-                </Sentiment>
-              </NewsHeader>
+        <>
+          <NewsGrid>
+            {getFilteredAndPaginatedNews().currentPageNews.map((article, index) => (
+              <NewsCard key={index}>
+                <NewsHeader>
+                  <NewsTitle>{article.title}</NewsTitle>
+                  <Sentiment sentiment={article.sentiment}>
+                    {getSentimentLabel(article.sentiment)}
+                  </Sentiment>
+                </NewsHeader>
 
-              <NewsMeta>
-                <Source>{article.source}</Source>
-                <Time>
-                  <FiClock />
-                  {formatTimeAgo(article.publishedAt)}
-                </Time>
-              </NewsMeta>
+                <NewsMeta>
+                  <Source>{article.source}</Source>
+                  <Time>
+                    <FiClock />
+                    {formatTimeAgo(article.publishedAt)}
+                  </Time>
+                </NewsMeta>
 
-              <NewsDescription>{article.description}</NewsDescription>
+                <NewsDescription>{article.description}</NewsDescription>
 
-              <NewsActions>
-                <ReadMoreButton href={article.url} target="_blank" rel="noopener noreferrer">
-                  <FiTrendingUp />
-                  Read More
-                </ReadMoreButton>
-                <RelevanceScore>
-                  <FiStar />
-                  {Math.round(article.relevance_score * 100)}%
-                </RelevanceScore>
-              </NewsActions>
-            </NewsCard>
-          ))}
-        </NewsGrid>
+                <NewsActions>
+                  <ReadMoreButton href={article.url} target="_blank" rel="noopener noreferrer">
+                    <FiTrendingUp />
+                    Read More
+                  </ReadMoreButton>
+                  <RelevanceScore>
+                    <FiStar />
+                    {Math.round(article.relevance_score * 100)}%
+                  </RelevanceScore>
+                </NewsActions>
+              </NewsCard>
+            ))}
+          </NewsGrid>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <PaginationContainer>
+              <PaginationInfo>
+                Showing {((currentPage - 1) * articlesPerPage) + 1} - {Math.min(currentPage * articlesPerPage, getFilteredAndPaginatedNews().totalFiltered)} of {getFilteredAndPaginatedNews().totalFiltered} articles
+              </PaginationInfo>
+              <PaginationControls>
+                <PaginationButton 
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </PaginationButton>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <PaginationButton
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    active={currentPage === page}
+                  >
+                    {page}
+                  </PaginationButton>
+                ))}
+                
+                <PaginationButton 
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </PaginationButton>
+              </PaginationControls>
+            </PaginationContainer>
+          )}
+        </>
       )}
 
       {!loading && !error && hasMore && (
