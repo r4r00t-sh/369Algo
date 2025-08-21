@@ -1,3 +1,4 @@
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -45,7 +46,7 @@ def check_database_health():
     try:
         # Check PostgreSQL
         with postgres_engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(sqlalchemy.text("SELECT 1"))
         
         # Check Redis
         redis_client.ping()

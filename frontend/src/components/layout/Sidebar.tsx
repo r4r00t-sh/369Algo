@@ -1,29 +1,66 @@
 import React from 'react';
-import styled from 'styled-components';
 import { NavLink, useLocation } from 'react-router-dom';
+import styled from 'styled-components';
 import { 
   FiHome, 
-  FiPieChart, 
   FiTrendingUp, 
-  FiBarChart3, 
-  FiStar, 
-  FiSettings 
+  FiBarChart, 
+  FiBookmark, 
+  FiSettings, 
+  FiPieChart
 } from 'react-icons/fi';
 
-const SidebarContainer = styled.aside`
-  width: 250px;
+const SidebarContainer = styled.div`
+  width: 240px;
   background: ${({ theme }) => theme.colors.surface};
   border-right: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  padding: ${({ theme }) => theme.spacing.lg} 0;
   height: 100vh;
-  position: sticky;
+  position: fixed;
+  left: 0;
   top: 0;
+  z-index: 100;
+  overflow-y: auto;
 `;
 
-const NavList = styled.nav`
+const LogoSection = styled.div`
+  padding: ${({ theme }) => theme.spacing.lg};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
   display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.xs};
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+`;
+
+const Logo = styled.div`
+  width: 40px;
+  height: 40px;
+  background: ${({ theme }) => theme.colors.primary};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
+  font-size: ${({ theme }) => theme.typography.fontSizes.lg};
+`;
+
+const LogoText = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSizes.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
+  color: ${({ theme }) => theme.colors.primary};
+`;
+
+const NavSection = styled.div`
+  padding: ${({ theme }) => theme.spacing.md} 0;
+`;
+
+const NavTitle = styled.div`
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.lg};
+  font-size: ${({ theme }) => theme.typography.fontSizes.xs};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+  color: ${({ theme }) => theme.colors.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
 `;
 
 const NavItem = styled(NavLink)`
@@ -33,46 +70,50 @@ const NavItem = styled(NavLink)`
   padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.lg};
   color: ${({ theme }) => theme.colors.textSecondary};
   text-decoration: none;
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
   transition: all ${({ theme }) => theme.transitions.fast};
   border-right: 3px solid transparent;
-
+  
   &:hover {
     background: ${({ theme }) => theme.colors.surfaceHover};
     color: ${({ theme }) => theme.colors.text};
   }
-
+  
   &.active {
-    background: ${({ theme }) => theme.colors.primary};
-    color: ${({ theme }) => theme.colors.white};
-    border-right-color: ${({ theme }) => theme.colors.primaryHover};
+    background: ${({ theme }) => theme.colors.primary}10;
+    color: ${({ theme }) => theme.colors.primary};
+    border-right-color: ${({ theme }) => theme.colors.primary};
   }
-
+  
   svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
   }
-`;
-
-const NavText = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
 `;
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
 
   const navItems = [
-    { path: '/', icon: FiHome, text: 'Dashboard' },
-    { path: '/portfolio', icon: FiPieChart, text: 'Portfolio' },
-    { path: '/trading', icon: FiTrendingUp, text: 'Trading' },
-    { path: '/market', icon: FiBarChart3, text: 'Market Data' },
-    { path: '/watchlist', icon: FiStar, text: 'Watchlist' },
-    { path: '/settings', icon: FiSettings, text: 'Settings' },
+    { path: '/', label: 'Dashboard', icon: FiHome },
+    { path: '/portfolio', label: 'Portfolio', icon: FiPieChart },
+    { path: '/trading', label: 'Trading', icon: FiTrendingUp },
+    { path: '/market', label: 'Market Data', icon: FiBarChart },
+    { path: '/watchlist', label: 'Watchlist', icon: FiBookmark },
+    { path: '/settings', label: 'Settings', icon: FiSettings },
   ];
 
   return (
     <SidebarContainer>
-      <NavList>
+      <LogoSection>
+        <Logo>F</Logo>
+        <LogoText>Trading</LogoText>
+      </LogoSection>
+      
+      <NavSection>
+        <NavTitle>Main Navigation</NavTitle>
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -82,11 +123,11 @@ const Sidebar: React.FC = () => {
               className={location.pathname === item.path ? 'active' : ''}
             >
               <Icon />
-              <NavText>{item.text}</NavText>
+              {item.label}
             </NavItem>
           );
         })}
-      </NavList>
+      </NavSection>
     </SidebarContainer>
   );
 };

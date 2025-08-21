@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initializeAuth = async () => {
       if (token) {
         try {
-          const userData = await api.get('/auth/me');
+          const userData = await api.get('/api/auth/me');
           setUser(userData.data);
         } catch (error) {
           console.error('Failed to get user data:', error);
@@ -70,14 +70,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/api/auth/login', { email, password });
       const { access_token } = response.data;
 
       localStorage.setItem('token', access_token);
       setToken(access_token);
 
       // Get user data
-      const userResponse = await api.get('/auth/me');
+      const userResponse = await api.get('/api/auth/me');
       setUser(userResponse.data);
 
       return true;
@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      await api.post('/auth/register', userData);
+      await api.post('/api/auth/register', userData);
       return true;
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || 'Registration failed';

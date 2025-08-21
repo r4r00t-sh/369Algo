@@ -79,7 +79,7 @@ class NewsArticle(Base):
     symbol = Column(String(20), index=True)  # Related stock symbol
     
     # JSON column for article metadata
-    metadata = Column(JSON)
+    article_metadata = Column(JSON)
     
     # Indexes
     __table_args__ = (

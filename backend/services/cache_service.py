@@ -88,6 +88,17 @@ class CacheService:
         """Get cached trending stocks"""
         return self.get("market:trending")
     
+    # Stock News Caching
+    def cache_stock_news(self, symbol: str, news_data: List[Dict[str, Any]], ttl: int = 3600) -> bool:
+        """Cache stock news data"""
+        key = f"news:{symbol.upper()}"
+        return self.set(key, news_data, ttl)
+    
+    def get_stock_news(self, symbol: str) -> Optional[List[Dict[str, Any]]]:
+        """Get cached stock news"""
+        key = f"news:{symbol.upper()}"
+        return self.get(key)
+    
     # User Session Caching
     def cache_user_session(self, user_id: int, session_data: Dict[str, Any], ttl: int = 3600) -> bool:
         """Cache user session data"""

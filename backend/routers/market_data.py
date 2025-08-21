@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Optional, Dict, Any
-import jwt
+from jose import jwt
 import yfinance as yf
 import requests
+import json
 from datetime import datetime, timedelta
 
 from database import get_postgres_db
 from models.user import User
 from config import settings
 from services.market_data_service import MarketDataService
-from services.cache_service import CacheService
+from services.cache_service import cache_service
 
 router = APIRouter()
 security = HTTPBearer()
@@ -36,15 +37,28 @@ async def get_current_user(
 @router.get("/quote/{symbol}")
 async def get_stock_quote(
     symbol: str,
-    current_user: User = Depends(get_current_user),
-    cache: CacheService = Depends(lambda: CacheService())
+    current_user: User = Depends(get_current_user)
 ):
     """Get real-time stock quote for a symbol"""
     
     try:
         # Check cache first
-        cached_quote = await cache.get_cached_stock_quote(symbol)
+        cached_quote = cache_service.get_stock_quote(symbol)
         if cached_quote:
+            # Log user activity
+            user_action = {
+                "user_id": current_user.id,
+                "username": current_user.username,
+                "action": "viewed_stock_quote",
+                "symbol": symbol,
+                "timestamp": datetime.now().isoformat(),
+                "source": "cache"
+            }
+            
+            cache_service.redis_client.lpush(f"user:actions:{current_user.id}", json.dumps(user_action))
+            cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
+            cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
+            
             return {"source": "cache", "data": cached_quote}
         
         # Get fresh data from Yahoo Finance
@@ -63,11 +77,25 @@ async def get_stock_quote(
             "low": info.get("dayLow", 0),
             "open": info.get("open", 0),
             "previous_close": info.get("previousClose", 0),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now().isoformat()
         }
         
         # Cache the quote for 1 minute
-        await cache.cache_stock_quote(symbol, quote_data, 60)
+        cache_service.cache_stock_quote(symbol, quote_data, 60)
+        
+        # Log user activity
+        user_action = {
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "action": "viewed_stock_quote",
+            "symbol": symbol,
+            "timestamp": datetime.now().isoformat(),
+            "source": "live"
+        }
+        
+        cache_service.redis_client.lpush(f"user:actions:{current_user.id}", json.dumps(user_action))
+        cache_service.redis_client.ltrim(f"user:actions:{current_user.id}", 0, 49)
+        cache_service.redis_client.expire(f"user:actions:{current_user.id}", 3600)
         
         return {"source": "live", "data": quote_data}
         
@@ -77,8 +105,7 @@ async def get_stock_quote(
 @router.get("/quotes/batch")
 async def get_batch_quotes(
     symbols: str = Query(..., description="Comma-separated list of symbols"),
-    current_user: User = Depends(get_current_user),
-    cache: CacheService = Depends(lambda: CacheService())
+    current_user: User = Depends(get_current_user)
 ):
     """Get quotes for multiple symbols in batch"""
     
@@ -91,7 +118,7 @@ async def get_batch_quotes(
     for symbol in symbol_list:
         try:
             # Check cache first
-            cached_quote = await cache.get_cached_stock_quote(symbol)
+            cached_quote = cache_service.get_stock_quote(symbol)
             if cached_quote:
                 results[symbol] = {"source": "cache", "data": cached_quote}
                 continue
@@ -106,11 +133,11 @@ async def get_batch_quotes(
                 "change": info.get("regularMarketChange", 0),
                 "change_percent": info.get("regularMarketChangePercent", 0),
                 "volume": info.get("volume", 0),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now().isoformat()
             }
             
             # Cache the quote
-            await cache.cache_stock_quote(symbol, quote_data, 60)
+            cache_service.cache_stock_quote(symbol, quote_data, 60)
             results[symbol] = {"source": "live", "data": quote_data}
             
         except Exception as e:
@@ -120,14 +147,13 @@ async def get_batch_quotes(
 
 @router.get("/indices")
 async def get_market_indices(
-    current_user: User = Depends(get_current_user),
-    cache: CacheService = Depends(lambda: CacheService())
+    current_user: User = Depends(get_current_user)
 ):
     """Get major market indices"""
     
     try:
         # Check cache first
-        cached_indices = await cache.get_cached_market_indices()
+        cached_indices = cache_service.get_market_indices()
         if cached_indices:
             return {"source": "cache", "data": cached_indices}
         
@@ -154,7 +180,7 @@ async def get_market_indices(
                 indices_data.append({"symbol": index, "error": str(e)})
         
         # Cache for 5 minutes
-        await cache.cache_market_indices(indices_data, 300)
+        cache_service.cache_market_indices(indices_data, 300)
         
         return {"source": "live", "data": indices_data}
         
@@ -195,14 +221,13 @@ async def search_stocks(
 @router.get("/news/{symbol}")
 async def get_stock_news(
     symbol: str,
-    current_user: User = Depends(get_current_user),
-    cache: CacheService = Depends(lambda: CacheService())
+    current_user: User = Depends(get_current_user)
 ):
     """Get news for a specific stock"""
     
     try:
         # Check cache first
-        cached_news = await cache.get_cached_stock_news(symbol)
+        cached_news = cache_service.get_stock_news(symbol)
         if cached_news:
             return {"source": "cache", "data": cached_news}
         
@@ -222,7 +247,7 @@ async def get_stock_news(
             })
         
         # Cache for 1 hour
-        await cache.cache_stock_news(symbol, news_data, 3600)
+        cache_service.cache_stock_news(symbol, news_data, 3600)
         
         return {"source": "live", "data": news_data}
         
@@ -231,14 +256,13 @@ async def get_stock_news(
 
 @router.get("/trending")
 async def get_trending_stocks(
-    current_user: User = Depends(get_current_user),
-    cache: CacheService = Depends(lambda: CacheService())
+    current_user: User = Depends(get_current_user)
 ):
     """Get trending stocks based on volume and price movement"""
     
     try:
         # Check cache first
-        cached_trending = await cache.get_cached_trending_stocks()
+        cached_trending = cache_service.get_trending_stocks()
         if cached_trending:
             return {"source": "cache", "data": cached_trending}
         
@@ -264,7 +288,7 @@ async def get_trending_stocks(
                 trending_data.append({"symbol": symbol, "error": str(e)})
         
         # Cache for 30 minutes
-        await cache.cache_trending_stocks(trending_data, 1800)
+        cache_service.cache_trending_stocks(trending_data, 1800)
         
         return {"source": "live", "data": trending_data}
         

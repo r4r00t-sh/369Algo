@@ -179,7 +179,7 @@ backend/
 ```
 
 ### **Adding New Features**
-1. **Create Model** - Add SQLAlchemy model
+1. **Create Model** - Add SQLAlchemy modells
 2. **Create Schema** - Add Pydantic schema
 3. **Create Router** - Add API endpoints
 4. **Add Service** - Add business logic

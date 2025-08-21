@@ -17,8 +17,8 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "trading_app"
-    POSTGRES_USER: str = "trading_user"
-    POSTGRES_PASSWORD: str = "trading_password"
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "root"
     POSTGRES_URL: Optional[str] = None
     
     # Redis
@@ -52,9 +52,11 @@ class Settings(BaseSettings):
     # Security
     CORS_ORIGINS: list = ["http://localhost:3000", "http://127.0.0.1:3000"]
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": True,
+        "extra": "allow"
+    }
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

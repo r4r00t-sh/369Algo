@@ -1,138 +1,220 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useAuth } from '../contexts/AuthContext';
-import { api } from '../services/api';
-import { FiSearch, FiTrendingUp, FiTrendingDown, FiStar, FiPlus, FiNews, FiBarChart3 } from 'react-icons/fi';
+import { 
+  FiTrendingUp, 
+  FiTrendingDown, 
+  FiFilter,
+  FiRefreshCw
+} from 'react-icons/fi';
+import TradingViewChart from '../components/common/TradingViewChart';
 
-const Container = styled.div`
+const MarketDataContainer = styled.div`
   padding: ${({ theme }) => theme.spacing.lg};
 `;
 
-const Header = styled.div`
+const MarketDataHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
+  margin-bottom: ${({ theme }) => theme.spacing.xl};
 `;
+
+const HeaderLeft = styled.div``;
 
 const Title = styled.h1`
+  font-size: ${({ theme }) => theme.typography.fontSizes.xxxl};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
   color: ${({ theme }) => theme.colors.text};
-  margin: 0;
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
 `;
 
-const SearchSection = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  padding: ${({ theme }) => theme.spacing.lg};
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-  box-shadow: ${({ theme }) => theme.shadows.small};
+const Subtitle = styled.p`
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-size: ${({ theme }) => theme.typography.fontSizes.md};
 `;
 
-const SearchForm = styled.form`
+const HeaderActions = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.md};
-  align-items: center;
+`;
 
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: stretch;
+const ActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
+  border-radius: ${({ theme }) => theme.borderRadius.small};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.fast};
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceHover};
+    border-color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
+  }
+  
+  svg {
+    width: 16px;
+    height: 16px;
   }
 `;
 
+const SearchSection = styled.div`
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
+`;
+
 const SearchInput = styled.input`
-  flex: 1;
+  width: 100%;
+  max-width: 400px;
   padding: ${({ theme }) => theme.spacing.md};
   border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  background: ${({ theme }) => theme.colors.background};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
   font-size: ${({ theme }) => theme.typography.fontSizes.md};
 
   &:focus {
-    border-color: ${({ theme }) => theme.colors.primary};
     outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.primary}20;
+  }
+  
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.textMuted};
   }
 `;
 
-const SearchButton = styled.button`
+const IndicesGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: ${({ theme }) => theme.spacing.lg};
+  margin-bottom: ${({ theme }) => theme.spacing.xl};
+`;
+
+const IndexCard = styled.div`
+  background: ${({ theme }) => theme.colors.cardBackground};
+  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  padding: ${({ theme }) => theme.spacing.lg};
+  box-shadow: ${({ theme }) => theme.shadows.card};
+  text-align: center;
+`;
+
+const IndexName = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+`;
+
+const IndexValue = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSizes.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
+  color: ${({ theme }) => theme.colors.text};
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
+`;
+
+const IndexChange = styled.div<{ isPositive: boolean }>`
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  color: ${({ theme, isPositive }) => isPositive ? theme.colors.positive : theme.colors.negative};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.lg};
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.white};
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.primaryHover};
-  }
+  justify-content: center;
+  gap: ${({ theme }) => theme.spacing.xs};
 `;
 
-const MarketGrid = styled.div`
+const MarketOverviewGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: ${({ theme }) => theme.spacing.lg};
   margin-bottom: ${({ theme }) => theme.spacing.xl};
 
-  @media (max-width: 768px) {
+  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
     grid-template-columns: 1fr;
   }
 `;
 
-const Section = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
+const MarketOverviewCard = styled.div`
+  background: ${({ theme }) => theme.colors.cardBackground};
   border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
   border-radius: ${({ theme }) => theme.borderRadius.medium};
   padding: ${({ theme }) => theme.spacing.lg};
-  box-shadow: ${({ theme }) => theme.shadows.small};
+  box-shadow: ${({ theme }) => theme.shadows.card};
 `;
 
-const SectionTitle = styled.h3`
+const CardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
+`;
+
+const CardTitle = styled.h3`
+  font-size: ${({ theme }) => theme.typography.fontSizes.lg};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.semibold};
+  color: ${({ theme }) => theme.colors.text};
+`;
+
+const TopMoversGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${({ theme }) => theme.spacing.lg};
+`;
+
+const TopMoversCard = styled.div`
+  background: ${({ theme }) => theme.colors.cardBackground};
+  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  padding: ${({ theme }) => theme.spacing.lg};
+  box-shadow: ${({ theme }) => theme.shadows.card};
+`;
+
+const MoversTitle = styled.h4`
+  font-size: ${({ theme }) => theme.typography.fontSizes.md};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.semibold};
   color: ${({ theme }) => theme.colors.text};
   margin-bottom: ${({ theme }) => theme.spacing.md};
-  font-size: ${({ theme }) => theme.typography.fontSizes.lg};
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
 `;
 
-const StockCard = styled.div`
-  background: ${({ theme }) => theme.colors.surfaceHover};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  padding: ${({ theme }) => theme.spacing.md};
-  margin-bottom: ${({ theme }) => theme.spacing.md};
+const StockList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.sm};
+`;
+
+const StockItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: all ${({ theme }) => theme.transitions.fast};
+  padding: ${({ theme }) => theme.spacing.sm} 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${({ theme }) => theme.shadows.medium};
+  &:last-child {
+    border-bottom: none;
   }
 `;
 
 const StockInfo = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.xs};
 `;
 
 const StockSymbol = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
   font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
   color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
 `;
 
 const StockName = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  font-size: ${({ theme }) => theme.typography.fontSizes.xs};
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
@@ -141,444 +223,273 @@ const StockPrice = styled.div`
 `;
 
 const PriceValue = styled.div`
-  font-weight: ${({ theme }) => theme.typography.fontWeights.semibold};
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
   color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
 `;
 
 const PriceChange = styled.div<{ isPositive: boolean }>`
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  color: ${({ theme, isPositive }) =>
-    isPositive ? theme.colors.positive : theme.colors.negative
-  };
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.xs};
-  justify-content: flex-end;
+  font-size: ${({ theme }) => theme.typography.fontSizes.xs};
+  color: ${({ theme, isPositive }) => isPositive ? theme.colors.positive : theme.colors.negative};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
 `;
 
-const AddToWatchlistButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.white};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.primaryHover};
-    transform: scale(1.1);
+const MarketTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+    text-align: left;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
+    font-size: ${({ theme }) => theme.typography.fontSizes.sm};
   }
-`;
-
-const NewsSection = styled.div`
-  margin-top: ${({ theme }) => theme.spacing.lg};
-`;
-
-const NewsItem = styled.div`
-  padding: ${({ theme }) => theme.spacing.md};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  transition: all ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
+  
+  th {
+    background: ${({ theme }) => theme.colors.surface};
+    font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+    color: ${({ theme }) => theme.colors.textSecondary};
+  }
+  
+  tr:hover {
     background: ${({ theme }) => theme.colors.surfaceHover};
   }
-
-  &:last-child {
-    border-bottom: none;
-  }
 `;
 
-const NewsTitle = styled.h4`
-  color: ${({ theme }) => theme.colors.text};
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-`;
+// Sample data
+const indicesData = [
+  { name: 'NIFTY 50', value: 19500.50, change: 156.25, changePercent: 0.81 },
+  { name: 'SENSEX', value: 64500.75, change: 425.50, changePercent: 0.66 },
+  { name: 'BANK NIFTY', value: 44500.25, change: -225.75, changePercent: -0.50 },
+  { name: 'NIFTY IT', value: 32500.00, change: 125.50, changePercent: 0.39 },
+  { name: 'NIFTY PHARMA', value: 18500.75, change: -75.25, changePercent: -0.41 },
+  { name: 'NIFTY AUTO', value: 22500.50, change: 325.75, changePercent: 1.47 },
+];
 
-const NewsSummary = styled.p`
-  color: ${({ theme }) => theme.colors.textSecondary};
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  line-height: 1.5;
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-`;
+const marketChartData = [
+  { time: '9:00', nifty: 19350, sensex: 64000 },
+  { time: '10:00', nifty: 19400, sensex: 64100 },
+  { time: '11:00', nifty: 19450, sensex: 64200 },
+  { time: '12:00', nifty: 19500, sensex: 64300 },
+  { time: '13:00', nifty: 19475, sensex: 64250 },
+  { time: '14:00', nifty: 19500, sensex: 64300 },
+  { time: '15:00', nifty: 19525, sensex: 64400 },
+  { time: '16:00', nifty: 19550, sensex: 64500 },
+];
 
-const NewsMeta = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: ${({ theme }) => theme.typography.fontSizes.xs};
-  color: ${({ theme }) => theme.colors.textMuted};
-`;
+const topGainers = [
+  { symbol: 'TATAMOTORS', name: 'Tata Motors', price: 850.50, change: 45.25, changePercent: 5.62 },
+  { symbol: 'BAJFINANCE', name: 'Bajaj Finance', price: 7250.75, change: 325.50, changePercent: 4.71 },
+  { symbol: 'HINDUNILVR', name: 'Hindustan Unilever', price: 2850.00, change: 125.75, changePercent: 4.62 },
+  { symbol: 'ITC', name: 'ITC Ltd', price: 425.50, change: 18.25, changePercent: 4.48 },
+  { symbol: 'AXISBANK', name: 'Axis Bank', price: 1150.25, change: 45.75, changePercent: 4.14 },
+];
 
-const EmptyState = styled.div`
-  text-align: center;
-  padding: ${({ theme }) => theme.spacing.xxl};
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
-const LoadingState = styled.div`
-  text-align: center;
-  padding: ${({ theme }) => theme.spacing.xxl};
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
-interface StockQuote {
-  symbol: string;
-  price: number;
-  change: number;
-  change_percent: number;
-  volume: number;
-  market_cap: number;
-  pe_ratio: number;
-  high: number;
-  low: number;
-  open: number;
-  previous_close: number;
-  timestamp: string;
-}
-
-interface MarketIndex {
-  symbol: string;
-  name: string;
-  price: number;
-  change: number;
-  change_percent: number;
-  volume: number;
-}
-
-interface NewsArticle {
-  title: string;
-  summary: string;
-  link: string;
-  publisher: string;
-  published: string;
-  image: string;
-}
-
-interface SearchResult {
-  symbol: string;
-  name: string;
-  exchange: string;
-  type: string;
-  price: number;
-}
+const topLosers = [
+  { symbol: 'WIPRO', name: 'Wipro Ltd', price: 445.50, change: -25.75, changePercent: -5.46 },
+  { symbol: 'TECHM', name: 'Tech Mahindra', price: 1250.00, change: -65.50, changePercent: -4.98 },
+  { symbol: 'HCLTECH', name: 'HCL Technologies', price: 1150.75, change: -55.25, changePercent: -4.58 },
+  { symbol: 'INFY', name: 'Infosys', price: 1450.00, change: -65.00, changePercent: -4.29 },
+  { symbol: 'TCS', name: 'Tata Consultancy', price: 3850.75, change: -175.25, changePercent: -4.35 },
+];
 
 const MarketData: React.FC = () => {
-  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [stockQuote, setStockQuote] = useState<StockQuote | null>(null);
-  const [marketIndices, setMarketIndices] = useState<MarketIndex[]>([]);
-  const [trendingStocks, setTrendingStocks] = useState<StockQuote[]>([]);
-  const [news, setNews] = useState<NewsArticle[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'search' | 'news'>('overview');
-
-  useEffect(() => {
-    fetchMarketData();
-  }, []);
-
-  const fetchMarketData = async () => {
-    try {
-      // Fetch market indices
-      const indicesResponse = await api.get('/api/market/indices');
-      if (indicesResponse.data?.data) {
-        setMarketIndices(indicesResponse.data.data);
-      }
-
-      // Fetch trending stocks
-      const trendingResponse = await api.get('/api/market/trending');
-      if (trendingResponse.data?.data) {
-        setTrendingStocks(trendingResponse.data.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch market data:', error);
-    }
-  };
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-
-    setIsLoading(true);
-    try {
-      const response = await api.get(`/api/market/search?query=${encodeURIComponent(searchQuery)}`);
-      if (response.data?.results) {
-        setSearchResults(response.data.results);
-        setActiveTab('search');
-      }
-    } catch (error) {
-      console.error('Search failed:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleStockSelect = async (symbol: string) => {
-    try {
-      const response = await api.get(`/api/market/quote/${symbol}`);
-      if (response.data?.data) {
-        setStockQuote(response.data.data);
-        setActiveTab('overview');
-      }
-    } catch (error) {
-      console.error('Failed to fetch stock quote:', error);
-    }
-  };
-
-  const handleAddToWatchlist = async (symbol: string) => {
-    try {
-      await api.post('/api/watchlist/add', { symbol });
-      alert(`${symbol} added to watchlist!`);
-    } catch (error) {
-      console.error('Failed to add to watchlist:', error);
-      alert('Failed to add to watchlist. Please try again.');
-    }
-  };
-
-  const fetchNews = async (symbol: string) => {
-    try {
-      const response = await api.get(`/api/market/news/${symbol}`);
-      if (response.data?.data) {
-        setNews(response.data.data);
-        setActiveTab('news');
-      }
-    } catch (error) {
-      console.error('Failed to fetch news:', error);
-    }
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
-  };
-
-  const formatNumber = (value: number) => {
-    if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`;
-    if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`;
-    if (value >= 1e3) return `${(value / 1e3).toFixed(2)}K`;
-    return value.toString();
-  };
 
   return (
-    <Container>
-      <Header>
+    <MarketDataContainer>
+      <MarketDataHeader>
+        <HeaderLeft>
         <Title>Market Data</Title>
-      </Header>
+          <Subtitle>Real-time market information and analysis</Subtitle>
+        </HeaderLeft>
+        <HeaderActions>
+          <ActionButton>
+            <FiFilter />
+            Filter
+          </ActionButton>
+          <ActionButton>
+            <FiRefreshCw />
+            Refresh
+          </ActionButton>
+        </HeaderActions>
+      </MarketDataHeader>
 
       <SearchSection>
-        <SearchForm onSubmit={handleSearch}>
           <SearchInput
             type="text"
+          placeholder="Search stocks, indices, or sectors..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for stocks, companies, or symbols..."
-            required
           />
-          <SearchButton type="submit" disabled={isLoading}>
-            <FiSearch />
-            {isLoading ? 'Searching...' : 'Search'}
-          </SearchButton>
-        </SearchForm>
       </SearchSection>
 
-      {/* Market Overview */}
-      {activeTab === 'overview' && (
-        <>
-          <MarketGrid>
-            {/* Market Indices */}
-            <Section>
-              <SectionTitle>
-                <FiBarChart3 />
-                Market Indices
-              </SectionTitle>
-              
-              {marketIndices.length === 0 ? (
-                <EmptyState>Loading market indices...</EmptyState>
-              ) : (
-                marketIndices.map((index) => (
-                  <StockCard key={index.symbol}>
-                    <StockInfo>
-                      <StockSymbol>{index.symbol}</StockSymbol>
-                      <StockName>{index.name}</StockName>
-                    </StockInfo>
-                    <StockPrice>
-                      <PriceValue>{formatCurrency(index.price)}</PriceValue>
-                      <PriceChange isPositive={index.change_percent >= 0}>
-                        {index.change_percent >= 0 ? <FiTrendingUp /> : <FiTrendingDown />}
-                        {index.change_percent >= 0 ? '+' : ''}{index.change_percent.toFixed(2)}%
-                      </PriceChange>
-                    </StockPrice>
-                  </StockCard>
-                ))
-              )}
-            </Section>
+      <IndicesGrid>
+        {indicesData.map((index) => (
+          <IndexCard key={index.name}>
+            <IndexName>{index.name}</IndexName>
+            <IndexValue>{index.value.toLocaleString()}</IndexValue>
+            <IndexChange isPositive={index.change >= 0}>
+              {index.change >= 0 ? <FiTrendingUp /> : <FiTrendingDown />}
+              {index.change >= 0 ? '+' : ''}{index.change.toLocaleString()} ({index.changePercent.toFixed(2)}%)
+            </IndexChange>
+          </IndexCard>
+        ))}
+      </IndicesGrid>
 
-            {/* Trending Stocks */}
-            <Section>
-              <SectionTitle>
-                <FiTrendingUp />
-                Trending Stocks
-              </SectionTitle>
-              
-              {trendingStocks.length === 0 ? (
-                <EmptyState>Loading trending stocks...</EmptyState>
-              ) : (
-                trendingStocks.map((stock) => (
-                  <StockCard key={stock.symbol}>
-                    <StockInfo>
-                      <StockSymbol>{stock.symbol}</StockSymbol>
-                      <StockName>{stock.symbol}</StockName>
-                    </StockInfo>
-                    <StockPrice>
-                      <PriceValue>{formatCurrency(stock.price)}</PriceValue>
-                      <PriceChange isPositive={stock.change_percent >= 0}>
-                        {stock.change_percent >= 0 ? <FiTrendingUp /> : <FiTrendingDown />}
-                        {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent.toFixed(2)}%
-                      </PriceChange>
-                    </StockPrice>
-                  </StockCard>
-                ))
-              )}
-            </Section>
-          </MarketGrid>
+      <MarketOverviewGrid>
+        <MarketOverviewCard>
+          <CardHeader>
+            <CardTitle>Market Performance - NIFTY 50</CardTitle>
+          </CardHeader>
+          <TradingViewChart symbol="NIFTY 50" height={300} />
+        </MarketOverviewCard>
 
-          {/* Selected Stock Quote */}
-          {stockQuote && (
-            <Section>
-              <SectionTitle>
-                <FiBarChart3 />
-                {stockQuote.symbol} - Stock Quote
-              </SectionTitle>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        <MarketOverviewCard>
+          <CardHeader>
+            <CardTitle>Market Summary</CardTitle>
+          </CardHeader>
                 <div>
-                  <strong>Current Price:</strong> {formatCurrency(stockQuote.price)}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              padding: '12px 0',
+              borderBottom: '1px solid #e2e8f0'
+            }}>
+                <div>
+                <div style={{ fontWeight: 600, color: '#0f172a' }}>Advance/Decline</div>
+                <div style={{ fontSize: '12px', color: '#64748b' }}>NSE</div>
                 </div>
-                <div>
-                  <strong>Change:</strong> 
-                  <span style={{ color: stockQuote.change >= 0 ? '#10b981' : '#ef4444' }}>
-                    {stockQuote.change >= 0 ? '+' : ''}{formatCurrency(stockQuote.change)} ({stockQuote.change_percent >= 0 ? '+' : ''}{stockQuote.change_percent.toFixed(2)}%)
-                  </span>
-                </div>
-                <div>
-                  <strong>Volume:</strong> {formatNumber(stockQuote.volume)}
-                </div>
-                <div>
-                  <strong>Market Cap:</strong> {formatCurrency(stockQuote.market_cap)}
-                </div>
-                <div>
-                  <strong>P/E Ratio:</strong> {stockQuote.pe_ratio?.toFixed(2) || 'N/A'}
-                </div>
-                <div>
-                  <strong>Day Range:</strong> {formatCurrency(stockQuote.low)} - {formatCurrency(stockQuote.high)}
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ color: '#059669', fontWeight: 600 }}>1,245</div>
+                <div style={{ color: '#dc2626', fontWeight: 600 }}>856</div>
                 </div>
               </div>
               
-              <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
-                <AddToWatchlistButton
-                  onClick={() => handleAddToWatchlist(stockQuote.symbol)}
-                  title="Add to Watchlist"
-                >
-                  <FiStar />
-                </AddToWatchlistButton>
-                <button
-                  onClick={() => fetchNews(stockQuote.symbol)}
-                  style={{
+            <div style={{ 
                     display: 'flex',
+              justifyContent: 'space-between', 
                     alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 16px',
-                    background: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <FiNews />
-                  View News
-                </button>
+              padding: '12px 0',
+              borderBottom: '1px solid #e2e8f0'
+            }}>
+              <div>
+                <div style={{ fontWeight: 600, color: '#0f172a' }}>Market Breadth</div>
+                <div style={{ fontSize: '12px', color: '#64748b' }}>Ratio</div>
               </div>
-            </Section>
-          )}
-        </>
-      )}
+              <div style={{ color: '#059669', fontWeight: 600 }}>1.45</div>
+              </div>
+            
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              padding: '12px 0'
+            }}>
+              <div>
+                <div style={{ fontWeight: 600, color: '#0f172a' }}>52W High</div>
+                <div style={{ fontSize: '12px', color: '#64748b' }}>NIFTY 50</div>
+              </div>
+              <div style={{ color: '#059669', fontWeight: 600 }}>19,850</div>
+            </div>
+          </div>
+        </MarketOverviewCard>
+      </MarketOverviewGrid>
 
-      {/* Search Results */}
-      {activeTab === 'search' && (
-        <Section>
-          <SectionTitle>
-            <FiSearch />
-            Search Results for "{searchQuery}"
-          </SectionTitle>
-          
-          {searchResults.length === 0 ? (
-            <EmptyState>No results found. Try a different search term.</EmptyState>
-          ) : (
-            searchResults.map((result) => (
-              <StockCard key={result.symbol} style={{ cursor: 'pointer' }} onClick={() => handleStockSelect(result.symbol)}>
+      <TopMoversGrid>
+        <TopMoversCard>
+          <MoversTitle style={{ color: '#059669' }}>
+            <FiTrendingUp />
+            Top Gainers
+          </MoversTitle>
+          <StockList>
+            {topGainers.map((stock) => (
+              <StockItem key={stock.symbol}>
                 <StockInfo>
-                  <StockSymbol>{result.symbol}</StockSymbol>
-                  <StockName>{result.name}</StockName>
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>
-                    {result.exchange} • {result.type}
-                  </span>
+                  <StockSymbol>{stock.symbol}</StockSymbol>
+                  <StockName>{stock.name}</StockName>
                 </StockInfo>
                 <StockPrice>
-                  <PriceValue>{formatCurrency(result.price)}</PriceValue>
-                  <AddToWatchlistButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAddToWatchlist(result.symbol);
-                    }}
-                    title="Add to Watchlist"
-                  >
-                    <FiPlus />
-                  </AddToWatchlistButton>
+                  <PriceValue>₹{stock.price.toLocaleString()}</PriceValue>
+                  <PriceChange isPositive={true}>
+                    +₹{stock.change.toLocaleString()} (+{stock.changePercent.toFixed(2)}%)
+                  </PriceChange>
                 </StockPrice>
-              </StockCard>
-            ))
-          )}
-        </Section>
-      )}
+              </StockItem>
+            ))}
+          </StockList>
+        </TopMoversCard>
 
-      {/* News */}
-      {activeTab === 'news' && (
-        <Section>
-          <SectionTitle>
-            <FiNews />
-            Latest News
-          </SectionTitle>
-          
-          {news.length === 0 ? (
-            <EmptyState>No news available for this stock.</EmptyState>
-          ) : (
-            <NewsSection>
-              {news.map((article, index) => (
-                <NewsItem key={index}>
-                  <NewsTitle>{article.title}</NewsTitle>
-                  <NewsSummary>{article.summary}</NewsSummary>
-                  <NewsMeta>
-                    <span>{article.publisher}</span>
-                    <span>{new Date(article.published).toLocaleDateString()}</span>
-                  </NewsMeta>
-                </NewsItem>
-              ))}
-            </NewsSection>
-          )}
-        </Section>
-      )}
-    </Container>
+        <TopMoversCard>
+          <MoversTitle style={{ color: '#dc2626' }}>
+            <FiTrendingDown />
+            Top Losers
+          </MoversTitle>
+          <StockList>
+            {topLosers.map((stock) => (
+              <StockItem key={stock.symbol}>
+                <StockInfo>
+                  <StockSymbol>{stock.symbol}</StockSymbol>
+                  <StockName>{stock.name}</StockName>
+                </StockInfo>
+                <StockPrice>
+                  <PriceValue>₹{stock.price.toLocaleString()}</PriceValue>
+                  <PriceChange isPositive={false}>
+                    ₹{stock.change.toLocaleString()} ({stock.changePercent.toFixed(2)}%)
+                  </PriceChange>
+                </StockPrice>
+              </StockItem>
+            ))}
+          </StockList>
+        </TopMoversCard>
+      </TopMoversGrid>
+
+      <MarketOverviewCard>
+        <CardHeader>
+          <CardTitle>All Stocks</CardTitle>
+        </CardHeader>
+        <MarketTable>
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Name</th>
+              <th>Last Price</th>
+              <th>Change</th>
+              <th>Change %</th>
+              <th>Volume</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...topGainers.slice(0, 3), ...topLosers.slice(0, 3)].map((stock) => (
+              <tr key={stock.symbol}>
+                <td>
+                  <div>
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{stock.symbol}</div>
+                    <div style={{ fontSize: '12px', color: '#64748b' }}>{stock.name}</div>
+                  </div>
+                </td>
+                <td>{stock.name}</td>
+                <td>₹{stock.price.toLocaleString()}</td>
+                <td style={{ 
+                  color: stock.change >= 0 ? '#059669' : '#dc2626', 
+                  fontWeight: 500 
+                }}>
+                  {stock.change >= 0 ? '+' : ''}₹{stock.change.toLocaleString()}
+                </td>
+                <td style={{ 
+                  color: stock.change >= 0 ? '#059669' : '#dc2626', 
+                  fontWeight: 500 
+                }}>
+                  {stock.change >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
+                </td>
+                <td>{(Math.random() * 1000000).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </MarketTable>
+      </MarketOverviewCard>
+    </MarketDataContainer>
   );
 };
 

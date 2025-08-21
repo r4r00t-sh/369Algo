@@ -4,7 +4,7 @@ import numpy as np
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 import asyncio
-import aiohttp
+import httpx
 import json
 
 class MarketDataService:

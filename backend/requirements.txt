@@ -3,18 +3,19 @@ fastapi==0.104.1
 uvicorn[standard]==0.24.0
 
 # Database
-sqlalchemy==2.0.23
-psycopg2-binary==2.9.9
+sqlalchemy==2.0.32
+psycopg2-binary==2.9.10
 redis==5.0.1
 
 # Authentication and Security
 passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.6
 
-# Data Processing
-pandas==2.1.3
-numpy==1.25.2
+# Data Processing - Updated for Python 3.13 compatibility
+pandas==2.2.3
+numpy==2.1.3
 python-dotenv==1.0.0
 
 # HTTP and API
@@ -22,8 +23,9 @@ requests==2.31.0
 httpx==0.25.2
 
 # Validation and Settings
-pydantic==2.5.0
+pydantic
 pydantic-settings==2.1.0
+email-validator==2.1.0
 
 # Broker APIs
 kiteconnect==5.0.0
