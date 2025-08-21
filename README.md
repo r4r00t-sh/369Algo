@@ -1,101 +1,126 @@
-# Trading Web Application
+# 369 Algo - Trading Web Application
 
-A comprehensive, production-grade trading platform built with React TypeScript frontend and Python FastAPI backend, featuring multi-broker support, multi-database architecture, and real-time market data.
+**369 Algo** is a comprehensive trading platform built with React TypeScript frontend and Python FastAPI backend, featuring multi-broker support, real-time market data, and portfolio management.
 
 ## 🚀 Features
 
 ### Core Functionality
 - **User Authentication & Authorization** - Secure JWT-based authentication system
 - **Portfolio Management** - Create, manage, and track multiple investment portfolios
-- **Trading Platform** - Connect to brokers and place orders (Zerodha, Angel One, Upstox)
-- **Market Data** - Real-time stock quotes, market indices, and financial news
-- **Watchlist** - Track stocks of interest with real-time updates
-- **Advanced Analytics** - Portfolio performance tracking and P&L calculations
+- **Trading Platform** - Connect to brokers and place orders
+- **Market Data** - Real-time stock quotes and market information
+- **Watchlist** - Track stocks of interest
+- **Responsive Dashboard** - Modern UI with dark/light theme support
 
 ### Technical Features
-- **Multi-Database Architecture** - PostgreSQL, Redis, InfluxDB, ClickHouse, MongoDB
-- **Real-time Data** - WebSocket support for live market updates
+- **FastAPI Backend** - High-performance Python web framework
+- **React Frontend** - Modern TypeScript-based user interface
+- **Database Integration** - SQLAlchemy with PostgreSQL support
+- **Real-time Updates** - WebSocket support for live market data
 - **Caching System** - Redis-based caching for improved performance
-- **Time-series Analytics** - InfluxDB for historical market data analysis
-- **Responsive Design** - Modern UI with dark/light theme support
-- **Type Safety** - Full TypeScript implementation
+ - **Type Safety** - Full TypeScript implementation
 
-## 🏗️ Architecture
+## 🏗️ Project Structure
 
-### Frontend (React + TypeScript)
 ```
-frontend/
-├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── common/         # Common components (ThemeToggle, etc.)
-│   │   └── layout/         # Layout components (Navbar, Sidebar)
-│   ├── contexts/           # React contexts (AuthContext)
-│   ├── hooks/              # Custom hooks (useTheme)
-│   ├── pages/              # Application pages
-│   ├── services/           # API services
-│   └── styles/             # Styled-components themes and global styles
+trading-web-app/
+├── backend/                 # Python FastAPI backend
+│   ├── models/             # Database models
+│   │   ├── broker.py       # Broker connection models
+│   │   ├── market_data.py  # Market data models
+│   │   ├── portfolio.py    # Portfolio models
+│   │   ├── trade.py        # Trading models
+│   │   ├── user.py         # User models
+│   │   └── watchlist.py    # Watchlist models
+│   ├── routers/            # API route handlers
+│   │   ├── auth.py         # Authentication routes
+│   │   ├── broker.py       # Broker management routes
+│   │   ├── market_data.py  # Market data routes
+│   │   ├── portfolio.py    # Portfolio routes
+│   │   ├── settings.py     # User settings routes
+│   │   ├── trading.py      # Trading routes
+│   │   └── watchlist.py    # Watchlist routes
+│   ├── schemas/            # Pydantic data models
+│   ├── services/           # Business logic services
+│   │   ├── broker_service.py      # Broker integration
+│   │   ├── cache_service.py       # Caching service
+│   │   ├── market_data_service.py # Market data handling
+│   │   ├── portfolio_service.py   # Portfolio management
+│   │   └── timeseries_service.py  # Time series data
+│   ├── config.py           # Configuration management
+│   ├── database.py         # Database connection
+│   ├── main.py             # FastAPI application entry point
+│   ├── realtime_updater.py # Real-time data updates
+│   ├── requirements.txt    # Python dependencies
+│   └── docker-compose.yml  # Database services
+├── frontend/               # React TypeScript frontend
+│   ├── src/
+│   │   ├── components/     # Reusable UI components
+│   │   │   ├── common/     # Common components
+│   │   │   │   ├── BrokerConnection.tsx
+│   │   │   │   ├── ErrorBoundary.tsx
+│   │   │   │   ├── ThemeToggle.tsx
+│   │   │   │   └── TradingViewChart.tsx
+│   │   │   └── layout/     # Layout components
+│   │   │       ├── Navbar.tsx
+│   │   │       └── Sidebar.tsx
+│   │   ├── contexts/       # React contexts
+│   │   │   └── AuthContext.tsx
+│   │   ├── hooks/          # Custom hooks
+│   │   │   └── useTheme.ts
+│   │   ├── pages/          # Application pages
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Login.tsx
+│   │   │   ├── MarketData.tsx
+│   │   │   ├── Portfolio.tsx
+│   │   │   ├── Register.tsx
+│   │   │   ├── Settings.tsx
+│   │   │   ├── Trading.tsx
+│   │   │   └── Watchlist.tsx
+│   │   ├── services/       # API services
+│   │   │   └── api.ts
+│   │   ├── styles/         # Styling and themes
+│   │   │   ├── GlobalStyles.ts
+│   │   │   └── theme.ts
+│   │   └── types/          # TypeScript type definitions
+│   ├── package.json        # Node.js dependencies
+│   └── tsconfig.json       # TypeScript configuration
+└── README.md               # Project documentation
 ```
-
-### Backend (Python + FastAPI)
-```
-backend/
-├── models/                  # SQLAlchemy database models
-├── routers/                # API route handlers
-├── schemas/                # Pydantic data models
-├── services/               # Business logic services
-├── database.py            # Database connection management
-├── main.py                # FastAPI application entry point
-└── config.py              # Configuration management
-```
-
-### Database Architecture
-- **PostgreSQL** - Primary database for user accounts, portfolios, and transactions
-- **Redis** - Caching and session management
-- **InfluxDB** - Time-series data for market analytics
-- **ClickHouse** - Columnar database
-- **MongoDB** - Document database
 
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **React 19** - Modern React with latest features
+- **React** - Modern React with latest features
 - **TypeScript** - Type-safe development
 - **Styled Components** - CSS-in-JS styling
-- **React Router v7** - Client-side routing
-- **Recharts** - Data visualization and charts
+- **React Router** - Client-side routing
 - **React Icons** - Icon library
 - **Axios** - HTTP client for API calls
 
 ### Backend
 - **FastAPI** - Modern, fast web framework
-- **SQLAlchemy 2.0** - Database ORM
-- **Alembic** - Database migrations
-- **Redis** - In-memory data store
-- **Celery** - Background task processing
+- **SQLAlchemy** - Database ORM
+- **PostgreSQL** - Primary database
+- **Redis** - Caching and sessions
 - **JWT** - Authentication tokens
 - **Pydantic** - Data validation
-
-### Databases
-- **PostgreSQL** - Primary relational database
-- **Redis** - Caching and sessions
-- **InfluxDB** - Time-series database
-- **ClickHouse** - Columnar database
-- **MongoDB** - Document database
+- **WebSockets** - Real-time communication
 
 ## 📦 Installation & Setup
 
 ### Prerequisites
-- Node.js 18+ and npm
-- Python 3.9+
+- Node.js 16+ and npm
+- Python 3.8+
 - Docker and Docker Compose
-- PostgreSQL, Redis, InfluxDB, ClickHouse, MongoDB
+- PostgreSQL and Redis
 
 ### Quick Start
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd trading-web-app
+   git clone https://github.com/r4r00t-sh/369Algo.git
+   cd 369Algo
    ```
 
 2. **Set up databases using Docker**
@@ -148,52 +173,14 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 # Database Configuration
-USE_MULTI_DB=true
-CACHE_ENABLED=true
-TIME_SERIES_ENABLED=true
+DATABASE_URL=postgresql://user:password@localhost/trading_app
+REDIS_URL=redis://localhost:6379
 
-# PostgreSQL
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=trading_user
-POSTGRES_PASSWORD=trading_password
-POSTGRES_DB=trading_app
-
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-REDIS_DB=0
-
-# InfluxDB
-INFLUXDB_URL=http://localhost:8086
-INFLUXDB_TOKEN=your-influxdb-token
-INFLUXDB_ORG=your-org
-INFLUXDB_BUCKET=trading_data
-
-# ClickHouse
-CLICKHOUSE_HOST=localhost
-CLICKHOUSE_PORT=9000
-CLICKHOUSE_USER=default
-CLICKHOUSE_PASSWORD=
-CLICKHOUSE_DB=trading_analytics
-
-# MongoDB
-MONGODB_HOST=localhost
-MONGODB_PORT=27017
-MONGODB_USER=
-MONGODB_PASSWORD=
-MONGODB_DB=trading_app
-
-# Broker API Keys
+# Broker API Keys (configure as needed)
 ZERODHA_API_KEY=your-zerodha-api-key
 ZERODHA_API_SECRET=your-zerodha-api-secret
-ANGEL_ONE_API_KEY=your-angel-one-api-key
-ANGEL_ONE_API_SECRET=your-angel-one-api-secret
-UPSTOX_API_KEY=your-upstox-api-key
-UPSTOX_API_SECRET=your-upstox-api-secret
 
-# Market Data APIs
+# Market Data APIs (configure as needed)
 ALPHA_VANTAGE_API_KEY=your-alpha-vantage-api-key
 ```
 
@@ -210,13 +197,13 @@ ALPHA_VANTAGE_API_KEY=your-alpha-vantage-api-key
 3. Track portfolio performance and P&L
 
 ### Trading
-1. Connect broker accounts (Zerodha, Angel One, Upstox)
-2. Place buy/sell orders with various order types
+1. Connect broker accounts
+2. Place buy/sell orders
 3. View trade history and order status
 
 ### Market Data
 1. Search for stocks and companies
-2. View real-time quotes and market indices
+2. View real-time quotes and market information
 3. Access financial news and trending stocks
 
 ### Watchlist
@@ -231,7 +218,7 @@ ALPHA_VANTAGE_API_KEY=your-alpha-vantage-api-key
 **Backend:**
 ```bash
 cd backend
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python main.py
 ```
 
 **Frontend:**
@@ -240,27 +227,19 @@ cd frontend
 npm start
 ```
 
-### Database Migrations
+### Database Setup
+
+The project includes a `docker-compose.yml` file for easy database setup:
 
 ```bash
 cd backend
-alembic revision --autogenerate -m "Description of changes"
-alembic upgrade head
+docker-compose up -d
 ```
 
-### Testing
-
-**Backend:**
-```bash
-cd backend
-pytest
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm test
-```
+This will start:
+- PostgreSQL database
+- Redis cache
+- Any other required services
 
 ## 📊 API Endpoints
 
@@ -268,7 +247,6 @@ npm test
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `GET /api/auth/me` - Get current user
-- `POST /api/auth/logout` - User logout
 
 ### Trading
 - `POST /api/trading/broker/connect` - Connect broker
@@ -284,8 +262,6 @@ npm test
 
 ### Market Data
 - `GET /api/market/quote/{symbol}` - Get stock quote
-- `GET /api/market/quotes/batch` - Get batch quotes
-- `GET /api/market/indices` - Get market indices
 - `GET /api/market/search` - Search stocks
 - `GET /api/market/news/{symbol}` - Get stock news
 
@@ -295,14 +271,14 @@ npm test
 - `PUT /api/watchlist/{id}` - Update watchlist item
 - `DELETE /api/watchlist/{id}` - Remove from watchlist
 
-### Settings
-- `GET /api/settings/profile` - Get user profile
-- `PUT /api/settings/profile` - Update profile
-- `GET /api/settings/preferences` - Get preferences
-- `PUT /api/settings/preferences` - Update preferences
-- `GET /api/settings/system` - Get system info
-
 ## 🐳 Docker Deployment
+
+### Development Environment
+
+```bash
+cd backend
+docker-compose up -d
+```
 
 ### Production Deployment
 
@@ -317,39 +293,34 @@ npm test
    docker-compose -f docker-compose.prod.yml up -d
    ```
 
-### Environment-specific configurations
-- `docker-compose.yml` - Development environment
-- `docker-compose.prod.yml` - Production environment
-
 ## 🔒 Security Features
 
 - JWT-based authentication
-- Password hashing with bcrypt
+- Password hashing
 - CORS middleware configuration
 - Input validation with Pydantic
 - SQL injection protection with SQLAlchemy
-- Rate limiting (configurable)
 
 ## 📈 Performance Features
 
 - Redis caching for frequently accessed data
 - Database connection pooling
 - Asynchronous API endpoints
-- Optimized database queries with indexes
-- Background task processing with Celery
+- Optimized database queries
 
 ## 🧪 Testing
 
 ### Backend Testing
-- Unit tests with pytest
-- API endpoint testing
-- Database integration tests
-- Mock services for external APIs
+```bash
+cd backend
+pytest
+```
 
 ### Frontend Testing
-- Component testing with React Testing Library
-- Integration tests
-- E2E testing capabilities
+```bash
+cd frontend
+npm test
+```
 
 ## 📝 Contributing
 
@@ -361,7 +332,7 @@ npm test
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 🤝 Support
 
@@ -373,7 +344,7 @@ For support and questions:
 ## 🔮 Roadmap
 
 ### Upcoming Features
-- [ ] Real-time WebSocket market data
+- [ ] Enhanced real-time WebSocket market data
 - [ ] Advanced charting with TradingView integration
 - [ ] Mobile app (React Native)
 - [ ] Algorithmic trading strategies
@@ -392,3 +363,6 @@ For support and questions:
 ---
 
 **Built with ❤️ using modern web technologies**
+
+**App Name**: 369 Algo  
+**Repository**: https://github.com/r4r00t-sh/369Algo.git
