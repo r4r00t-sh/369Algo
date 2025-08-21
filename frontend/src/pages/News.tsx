@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FiSearch, FiTrendingUp, FiClock, FiStar, FiExternalLink } from 'react-icons/fi';
+import { FiSearch, FiTrendingUp, FiClock, FiStar } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 
@@ -393,7 +393,7 @@ const News: React.FC = () => {
 
               <NewsActions>
                 <ReadMoreButton href={article.url} target="_blank" rel="noopener noreferrer">
-                  <FiExternalLink />
+                  <FiTrendingUp />
                   Read More
                 </ReadMoreButton>
                 <RelevanceScore>
