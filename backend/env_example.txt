@@ -3,6 +3,9 @@
 # Alpha Vantage API Key (for US markets)
 ALPHA_VANTAGE_API_KEY=YH3TUSYBE44AV7UL
 
+# News API Key (for financial news)
+NEWS_API_KEY=your_news_api_key_here
+
 # Security
 SECRET_KEY=your-secret-key-change-in-production
 ALGORITHM=HS256

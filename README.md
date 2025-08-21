@@ -208,6 +208,14 @@ ALPHA_VANTAGE_API_KEY=your-alpha-vantage-api-key
 4. **Market Indices**: NIFTY 50, SENSEX, and other major indices
 5. **Market Status**: Indian market open/close status with IST timing
 
+### Financial News
+1. **Live News Feed**: Real-time financial and business news
+2. **News Categories**: Business, Markets, Economy, Technology, Crypto, etc.
+3. **Stock-Specific News**: Company and stock-related news
+4. **Breaking News**: High-priority market updates
+5. **News Search**: Search through financial news articles
+6. **Trending News**: Most relevant and popular news
+
 ### Watchlist
 1. Add stocks to your personal watchlist
 2. Monitor real-time price changes
@@ -266,6 +274,15 @@ This will start:
 - `GET /api/market/quote/{symbol}` - Get global stock quote
 - `GET /api/market/search` - Search global stocks
 - `GET /api/market/news/{symbol}` - Get stock news
+
+### Financial News
+- `GET /api/news/latest` - Get latest financial news by category
+- `GET /api/news/categories` - Get available news categories
+- `GET /api/news/stock/{symbol}` - Get stock-specific news
+- `GET /api/news/search` - Search news articles
+- `GET /api/news/trending` - Get trending financial news
+- `GET /api/news/market-updates` - Get market-specific updates
+- `GET /api/news/breaking` - Get breaking financial news
 
 ### Indian Markets (NSE/BSE)
 - `GET /api/market/indian/quote/{symbol}` - Get Indian stock quote (NSE/BSE)

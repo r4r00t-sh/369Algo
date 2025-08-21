@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     
     # Market Data
     ALPHA_VANTAGE_API_KEY: Optional[str] = None
+    NEWS_API_KEY: Optional[str] = None
     YAHOO_FINANCE_ENABLED: bool = True
     
     # Security
