@@ -182,4 +182,4 @@ We would like to thank our internal security team and team members who have help
 
 **Thank you for helping keep 369 Algo secure!** 🔒
 
-Your responsible disclosure helps protect our users and the broader trading community.
+Your responsible disclosure helps protect our team and company.

@@ -177,4 +177,4 @@ For support and questions:
 
 ---
 
-**369 Algo** - Empowering traders with professional-grade tools and insights.
+**369 Algo** - Empowering our team with professional-grade trading tools and insights.

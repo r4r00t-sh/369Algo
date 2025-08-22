@@ -9,7 +9,7 @@ help: ## Show this help message
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo ""
-	@echo "For more information, visit: https://github.com/r4r00t-sh/369Algo"
+	@echo "For more information, contact your team lead or visit: https://github.com/r4r00t-sh/369Algo"
 
 # Installation
 install: ## Install production dependencies
@@ -276,7 +276,7 @@ status: ## Show application status
 info: ## Show project information
 	@echo "369 Algo Trading Application"
 	@echo "Version: 1.0.0"
-	@echo "Repository: https://github.com/r4r00t-sh/369Algo"
+	@echo "Repository: https://github.com/r4r00t-sh/369Algo (Private Team Repository)"
 	@echo "Documentation: https://369algo.com/docs"
 	@echo ""
 	@echo "Current branch: $$(git branch --show-current)"

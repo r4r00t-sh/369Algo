@@ -7,7 +7,7 @@ name = "369algo"
 version = "1.0.0"
 description = "Professional Trading Web Application with Real-time Market Data and Financial News"
 readme = "README.md"
-license = {text = "MIT"}
+license = {text = "Proprietary"}
 authors = [
     {name = "369 Algo Team", email = "team@369algo.com"}
 ]
