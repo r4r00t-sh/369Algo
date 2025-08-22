@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import styled from 'styled-components';
-import { FiSearch, FiTrendingUp, FiClock, FiStar, FiRefreshCw } from 'react-icons/fi';
+import { FiSearch, FiTrendingUp, FiClock, FiStar, FiRefreshCw, FiFilter } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 
@@ -116,15 +116,15 @@ const CategoryTab = styled.button<{ active: boolean }>`
   }
 `;
 
-const SentimentFilterTabs = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing.sm};
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-  overflow-x: auto;
-  padding-bottom: ${({ theme }) => theme.spacing.sm};
+const FilterContainer = styled.div`
+  position: relative;
+  display: inline-block;
 `;
 
-const SentimentFilterTab = styled.button<{ active: boolean }>`
+const FilterButton = styled.button<{ active: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.xs};
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   background: ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surface};
   color: ${({ active, theme }) => active ? 'white' : theme.colors.textSecondary};
@@ -134,11 +134,63 @@ const SentimentFilterTab = styled.button<{ active: boolean }>`
   font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
   cursor: pointer;
   transition: all ${({ theme }) => theme.transitions.fast};
-  white-space: nowrap;
   
   &:hover {
     background: ${({ active, theme }) => active ? theme.colors.primaryHover : theme.colors.surfaceHover};
   }
+`;
+
+const FilterPopup = styled.div<{ isOpen: boolean }>`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: ${({ theme }) => theme.spacing.xs};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: ${({ theme }) => theme.spacing.md};
+  min-width: 200px;
+  z-index: 1000;
+  opacity: ${({ isOpen }) => isOpen ? 1 : 0};
+  visibility: ${({ isOpen }) => isOpen ? 'visible' : 'hidden'};
+  transform: ${({ isOpen }) => isOpen ? 'translateY(0)' : 'translateY(-10px)'};
+  transition: all ${({ theme }) => theme.transitions.fast};
+`;
+
+const FilterTitle = styled.h4`
+  margin: 0 0 ${({ theme }) => theme.spacing.sm} 0;
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+  color: ${({ theme }) => theme.colors.text};
+`;
+
+const FilterOption = styled.label`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+  padding: ${({ theme }) => theme.spacing.xs} 0;
+  cursor: pointer;
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  
+  &:hover {
+    color: ${({ theme }) => theme.colors.text};
+  }
+`;
+
+const FilterCheckbox = styled.input`
+  margin: 0;
+  cursor: pointer;
+`;
+
+const FilterCount = styled.span`
+  margin-left: auto;
+  font-size: ${({ theme }) => theme.typography.fontSizes.xs};
+  color: ${({ theme }) => theme.colors.textMuted};
+  background: ${({ theme }) => theme.colors.surfaceBorder};
+  padding: 2px 6px;
+  border-radius: ${({ theme }) => theme.borderRadius.small};
 `;
 
 const NewsGrid = styled.div`
@@ -384,8 +436,10 @@ const News: React.FC = () => {
   const [articlesPerPage] = useState<number>(12);
   
   // Sentiment filtering
-  const [selectedSentiment, setSelectedSentiment] = useState<string>('all');
-  const [availableSentiments, setAvailableSentiments] = useState<string[]>(['all', 'positive', 'neutral', 'negative']);
+  const [selectedSentiments, setSelectedSentiments] = useState<string[]>(['all']);
+  const [availableSentiments] = useState<string[]>(['all', 'positive', 'neutral', 'negative']);
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
+  const filterRef = useRef<HTMLDivElement>(null);
 
   // Default categories if API fails
   const defaultCategories = {
@@ -398,6 +452,35 @@ const News: React.FC = () => {
     'crypto': 'Cryptocurrency',
     'commodities': 'Commodities & Oil'
   };
+
+  // Memoized filtered and paginated news calculation
+  const { currentPageNews, totalFiltered, calculatedTotalPages } = useMemo(() => {
+    let filteredNews = news;
+    
+    // Apply sentiment filter
+    if (!selectedSentiments.includes('all')) {
+      filteredNews = news.filter(article => selectedSentiments.includes(article.sentiment));
+    }
+    
+    // Calculate pagination
+    const totalFiltered = filteredNews.length;
+    const calculatedTotalPages = Math.ceil(totalFiltered / articlesPerPage);
+    
+    // Get current page articles
+    const startIndex = (currentPage - 1) * articlesPerPage;
+    const endIndex = startIndex + articlesPerPage;
+    
+    return {
+      currentPageNews: filteredNews.slice(startIndex, endIndex),
+      totalFiltered,
+      calculatedTotalPages
+    };
+  }, [news, selectedSentiments, currentPage, articlesPerPage]);
+
+  // Update totalPages when calculatedTotalPages changes
+  useEffect(() => {
+    setTotalPages(calculatedTotalPages);
+  }, [calculatedTotalPages]);
 
   useEffect(() => {
     fetchCategories();
@@ -416,7 +499,7 @@ const News: React.FC = () => {
     }
   };
 
-  const fetchNews = async (category: string) => {
+  const fetchNews = useCallback(async (category: string) => {
     try {
       setLoading(true);
       setError('');
@@ -438,9 +521,9 @@ const News: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentLimit, selectedCategory]);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
     
     try {
@@ -455,23 +538,23 @@ const News: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, selectedCategory, currentLimit]);
 
-  const handleCategoryChange = (category: string) => {
+  const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category);
     setSearchQuery('');
     setCurrentLimit(50); // Reset limit when category changes
     setHasMore(true); // Reset hasMore when category changes
     setCurrentPage(1); // Reset to first page
-    setSelectedSentiment('all'); // Reset sentiment filter
-  };
+    setSelectedSentiments(['all']); // Reset sentiment filter
+  }, []);
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     setError('');
     fetchNews(selectedCategory);
-  };
+  }, [selectedCategory]);
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = useCallback(async () => {
     try {
       setLoading(true);
       const newLimit = currentLimit + 25;
@@ -493,43 +576,66 @@ const News: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCategory, currentLimit]);
 
-  const handleSentimentFilter = (sentiment: string) => {
-    setSelectedSentiment(sentiment);
+  const handleSentimentFilter = useCallback((sentiment: string) => {
+    setSelectedSentiments(prev => {
+      if (sentiment === 'all') {
+        return ['all'];
+      }
+      
+      if (prev.includes('all')) {
+        return [sentiment];
+      }
+      
+      if (prev.includes(sentiment)) {
+        const newSelection = prev.filter(s => s !== sentiment);
+        return newSelection.length === 0 ? ['all'] : newSelection;
+      } else {
+        return [...prev, sentiment];
+      }
+    });
     setCurrentPage(1); // Reset to first page when filtering
-  };
+  }, []);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const toggleFilter = useCallback(() => {
+    setIsFilterOpen(prev => !prev);
+  }, []);
 
-  const getFilteredAndPaginatedNews = () => {
-    let filteredNews = news;
-    
-    // Apply sentiment filter
-    if (selectedSentiment !== 'all') {
-      filteredNews = news.filter(article => article.sentiment === selectedSentiment);
-    }
-    
-    // Calculate pagination
-    const totalFiltered = filteredNews.length;
-    const totalPages = Math.ceil(totalFiltered / articlesPerPage);
-    setTotalPages(totalPages);
-    
-    // Get current page articles
-    const startIndex = (currentPage - 1) * articlesPerPage;
-    const endIndex = startIndex + articlesPerPage;
-    
-    return {
-      currentPageNews: filteredNews.slice(startIndex, endIndex),
-      totalPages,
-      totalFiltered
+  const closeFilter = useCallback(() => {
+    setIsFilterOpen(false);
+  }, []);
+
+  // Close filter when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        closeFilter();
+      }
     };
-  };
 
-  const formatTimeAgo = (publishedAt: string) => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [closeFilter]);
+
+  // Get sentiment counts
+  const getSentimentCounts = useCallback(() => {
+    const counts: { [key: string]: number } = {};
+    availableSentiments.forEach(sentiment => {
+      if (sentiment === 'all') {
+        counts[sentiment] = news.length;
+      } else {
+        counts[sentiment] = news.filter(article => article.sentiment === sentiment).length;
+      }
+    });
+    return counts;
+  }, [news, availableSentiments]);
+
+  const sentimentCounts = getSentimentCounts();
+
+  const formatTimeAgo = useCallback((publishedAt: string) => {
     const now = new Date();
     const published = new Date(publishedAt);
     const diffInHours = Math.floor((now.getTime() - published.getTime()) / (1000 * 60 * 60));
@@ -538,15 +644,20 @@ const News: React.FC = () => {
     if (diffInHours < 24) return `${diffInHours}h ago`;
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays}d ago`;
-  };
+  }, []);
 
-  const getSentimentLabel = (sentiment: string) => {
+  const getSentimentLabel = useCallback((sentiment: string) => {
     switch (sentiment) {
       case 'positive': return 'Bullish';
       case 'negative': return 'Bearish';
       default: return 'Neutral';
     }
-  };
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   if (loading && news.length === 0) {
     return (
@@ -603,19 +714,35 @@ const News: React.FC = () => {
           ))}
         </CategoryTabs>
 
-        <SentimentFilterTabs>
-          {availableSentiments.map((sentiment) => (
-            <SentimentFilterTab
-              key={sentiment}
-              active={selectedSentiment === sentiment}
-              onClick={() => handleSentimentFilter(sentiment)}
-            >
-              {sentiment === 'all' ? 'All Sentiments' : 
-               sentiment === 'positive' ? 'Bullish' : 
-               sentiment === 'negative' ? 'Bearish' : 'Neutral'}
-            </SentimentFilterTab>
-          ))}
-        </SentimentFilterTabs>
+        <FilterContainer ref={filterRef}>
+          <FilterButton 
+            active={!selectedSentiments.includes('all')} 
+            onClick={toggleFilter}
+          >
+            <FiFilter />
+            Filter
+            {!selectedSentiments.includes('all') && (
+              <FilterCount>{selectedSentiments.length}</FilterCount>
+            )}
+          </FilterButton>
+          
+          <FilterPopup isOpen={isFilterOpen}>
+            <FilterTitle>Filter by Sentiment</FilterTitle>
+            {availableSentiments.map((sentiment) => (
+              <FilterOption key={sentiment}>
+                <FilterCheckbox
+                  type="checkbox"
+                  checked={selectedSentiments.includes(sentiment)}
+                  onChange={() => handleSentimentFilter(sentiment)}
+                />
+                {sentiment === 'all' ? 'All Sentiments' : 
+                 sentiment === 'positive' ? 'Bullish' : 
+                 sentiment === 'negative' ? 'Bearish' : 'Neutral'}
+                <FilterCount>{sentimentCounts[sentiment]}</FilterCount>
+              </FilterOption>
+            ))}
+          </FilterPopup>
+        </FilterContainer>
       </SearchSection>
 
       {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -627,7 +754,7 @@ const News: React.FC = () => {
       {!loading && !error && (
         <>
           <NewsGrid>
-            {getFilteredAndPaginatedNews().currentPageNews.map((article, index) => (
+            {currentPageNews.map((article, index) => (
               <NewsCard key={index}>
                 <NewsHeader>
                   <NewsTitle>{article.title}</NewsTitle>
@@ -664,7 +791,7 @@ const News: React.FC = () => {
           {totalPages > 1 && (
             <PaginationContainer>
               <PaginationInfo>
-                Showing {((currentPage - 1) * articlesPerPage) + 1} - {Math.min(currentPage * articlesPerPage, getFilteredAndPaginatedNews().totalFiltered)} of {getFilteredAndPaginatedNews().totalFiltered} articles
+                Showing {((currentPage - 1) * articlesPerPage) + 1} - {Math.min(currentPage * articlesPerPage, totalFiltered)} of {totalFiltered} articles
               </PaginationInfo>
               <PaginationControls>
                 <PaginationButton 
