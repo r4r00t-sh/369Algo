@@ -359,7 +359,12 @@ npm test
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is proprietary software owned by **369 Algo**. 
+- **Internal Use Only** - For authorized team members and collaborators
+- **Confidential** - Contains proprietary trading algorithms and business logic
+- **No Public Distribution** - Not intended for open source or public use
+
+See the [LICENSE](LICENSE) file for complete terms and restrictions.
 
 ## 🤝 Support
 

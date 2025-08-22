@@ -1,6 +1,6 @@
 # Contributing to 369 Algo
 
-Thank you for your interest in contributing to **369 Algo**! This document provides guidelines and information for contributors.
+Thank you for being part of the **369 Algo** development team! This document provides guidelines and information for team collaboration.
 
 ## 🚀 Getting Started
 
@@ -9,10 +9,11 @@ Thank you for your interest in contributing to **369 Algo**! This document provi
 - Node.js 16+
 - Git
 - Docker (optional, for local development)
+- **Team Access** - Must be granted access by project maintainers
 
 ### Development Setup
-1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/369Algo.git`
+1. **Get Access** - Request repository access from your team lead
+2. **Clone the Repository**: `git clone https://github.com/r4r00t-sh/369Algo.git`
 3. Create a virtual environment: `python -m venv venv`
 4. Activate the environment:
    - Windows: `venv\Scripts\activate`
@@ -87,8 +88,8 @@ npm run test:full
 4. **Update documentation** if needed
 5. **Run tests** to ensure everything passes
 6. **Commit your changes** with clear messages
-7. **Push to your fork** and create a Pull Request
-8. **Request review** from maintainers
+7. **Push to the repository** and create a Pull Request
+8. **Request review** from team members
 
 ### Pull Request Template
 ```markdown
@@ -173,9 +174,9 @@ We use [Semantic Versioning](https://semver.org/):
 ## 📞 Communication
 
 - **Issues**: Use GitHub Issues for bugs and features
-- **Discussions**: Use GitHub Discussions for questions
-- **Chat**: Join our community channels
-- **Email**: For sensitive matters
+- **Discussions**: Use GitHub Discussions for team questions
+- **Team Chat**: Use your team's communication platform (Slack, Teams, etc.)
+- **Email**: For sensitive matters or external communications
 
 ## 🎯 Contribution Areas
 
@@ -188,28 +189,31 @@ We welcome contributions in:
 - **DevOps**: CI/CD, deployment, monitoring
 - **Security**: Authentication, authorization, validation
 
-## 🏆 Recognition
+## 🏆 Team Recognition
 
-Contributors will be recognized in:
+Team members will be recognized in:
 
 - Project README
 - Release notes
-- Contributor hall of fame
-- Special acknowledgments
+- Team acknowledgments
+- Performance reviews
 
 ## 📜 License
 
-By contributing, you agree that your contributions will be licensed under the same license as the project.
+By contributing to this project, you acknowledge that:
+- All contributions become part of the proprietary **369 Algo** software
+- Your work is confidential and proprietary to the company
+- You agree to maintain confidentiality of the codebase
 
 ## 🆘 Need Help?
 
 - Check existing issues and discussions
 - Ask questions in GitHub Discussions
-- Contact maintainers directly
-- Join our community channels
+- Contact your team lead or project manager
+- Use your team's communication channels
 
 ---
 
-**Thank you for contributing to 369 Algo!** 🚀
+**Thank you for being part of the 369 Algo team!** 🚀
 
-Your contributions help make this project better for everyone in the trading community.
+Your contributions help make this project better for our team and company.

@@ -138,13 +138,14 @@ governing policies.
 
 ## Contact Information
 
-### **Community Leaders**
+### **Team Leaders**
 - **Email**: conduct@369algo.com
+- **Internal Chat**: Contact your team lead or HR representative
 - **Response Time**: Within 24 hours
 - **Confidentiality**: All reports are kept confidential
 
 ### **Emergency Contact**
-- **Phone**: [Available for verified community members]
+- **Phone**: Contact your team lead or HR immediately
 - **Response Time**: Within 2 hours for urgent matters
 
 ## Acknowledgment
@@ -177,6 +178,6 @@ If you have questions about this Code of Conduct, please contact us at
 
 ---
 
-**Together, we can build a welcoming and inclusive community for all traders and developers!** 🌟
+**Together, we can build a welcoming and inclusive team environment for all our developers!** 🌟
 
-Your participation and contributions make **369 Algo** better for everyone.
+Your participation and contributions make **369 Algo** better for our team and company.

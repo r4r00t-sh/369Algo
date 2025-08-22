@@ -163,16 +163,16 @@ Permissions-Policy: geolocation=(), microphone=(), camera=()
 
 ### **Security Team**
 - **Email**: security@369algo.com
-- **PGP Key**: [Available upon request]
+- **Internal Chat**: Use your team's security channel
 - **Response Time**: Within 48 hours
 
 ### **Emergency Contact**
-- **Phone**: [Available for verified security researchers]
+- **Phone**: Contact your team lead immediately
 - **Response Time**: Within 4 hours for critical issues
 
 ## Acknowledgments
 
-We would like to thank the security researchers and community members who have responsibly disclosed vulnerabilities and helped improve the security of **369 Algo**.
+We would like to thank our internal security team and team members who have helped identify and resolve security issues in **369 Algo**.
 
 ## Security Hall of Fame
 

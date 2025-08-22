@@ -172,7 +172,8 @@ Initial project setup and configuration:
 For support and questions:
 - Create an issue on GitHub
 - Check the documentation
-- Join our community discussions
+- Contact your team lead or project manager
+- Use your team's communication channels
 
 ---
 
