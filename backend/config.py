@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     UPSTOX_API_KEY: Optional[str] = None
     UPSTOX_API_SECRET: Optional[str] = None
     
+    # Fyers API Connect
+    FYERS_APP_ID: Optional[str] = None
+    FYERS_APP_SECRET: Optional[str] = None
+    FYERS_REDIRECT_URI: Optional[str] = None
+    
     # Market Data
     ALPHA_VANTAGE_API_KEY: Optional[str] = None
     NEWS_API_KEY: Optional[str] = None

@@ -6,6 +6,11 @@ ALPHA_VANTAGE_API_KEY=YH3TUSYBE44AV7UL
 # News API Key (for international and Indian market news)
 NEWS_API_KEY=ed871179c02644b3a43b7cebd2f701ee
 
+# Fyers API Connect Configuration
+FYERS_APP_ID=your_fyers_app_id_here
+FYERS_APP_SECRET=your_fyers_app_secret_here
+FYERS_REDIRECT_URI=http://localhost:3000/fyers-callback
+
 # Security
 SECRET_KEY=your-secret-key-change-in-production
 ALGORITHM=HS256
@@ -19,6 +24,8 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=root
 
 # Redis Configuration
+
+
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_DB=0
@@ -44,4 +51,4 @@ UPSTOX_API_SECRET=
 YAHOO_FINANCE_ENABLED=true
 
 # CORS
-CORS_ORIGINS=["http://localhost:3000", "http://127.0.0.1:3000"]
+CORS_ORIGINS=["http://localhost:3000", "http://127.0.0.1:3000","https://dbfhqpvf-3000.inc1.devtunnels.ms:3000"]

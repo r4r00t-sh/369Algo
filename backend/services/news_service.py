@@ -94,11 +94,17 @@ class NewsService:
             if category in ["markets", "business", "economy"]:
                 base_query += " OR India OR Indian OR NSE OR BSE OR NIFTY OR SENSEX"
             
+            # Get current time and 24 hours ago for recent news
+            now = datetime.utcnow()
+            yesterday = now - timedelta(hours=24)
+            from_date = yesterday.strftime('%Y-%m-%dT%H:%M:%S')
+            
             params = {
                 "q": base_query,
                 "language": "en",
                 "sortBy": "publishedAt",
                 "pageSize": min(limit, 100),
+                "from": from_date,  # Only get news from last 24 hours
                 "apiKey": self.news_api_key
             }
             
@@ -122,10 +128,15 @@ class NewsService:
         """Fetch news from Alpha Vantage"""
         try:
             # Alpha Vantage news is more limited, so we'll use it as a supplement
+            # Get current time and 24 hours ago for recent news
+            now = datetime.utcnow()
+            yesterday = now - timedelta(hours=24)
+            time_from = yesterday.strftime('%Y%m%dT%H%M')
+            
             params = {
                 "function": "NEWS_SENTIMENT",
                 "topics": "technology,earnings,ipo,mergers_and_acquisitions",
-                "time_from": "20240101T0000",
+                "time_from": time_from,  # Only get news from last 24 hours
                 "limit": min(limit, 50),
                 "apikey": self.alpha_vantage_api_key
             }

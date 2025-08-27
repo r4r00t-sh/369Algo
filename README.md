@@ -221,6 +221,44 @@ ALPHA_VANTAGE_API_KEY=your-alpha-vantage-api-key
 2. Monitor real-time price changes
 3. Customize stock names and descriptions
 
+## 🚀 Trading Strategies & Fyers API Integration
+
+### Features
+- **Custom Strategy Management**: Create, edit, and manage personalized trading strategies
+- **Strategy Templates**: Pre-built strategy templates for quick implementation
+- **Automated Execution**: Schedule and automate strategy execution
+- **Performance Tracking**: Monitor strategy performance with detailed analytics
+- **Risk Management**: Built-in risk management parameters and stop-loss controls
+- **Backtesting**: Test strategies against historical data
+- **Fyers API Integration**: Connect to Fyers trading platform for order execution
+- **Custom Order Buttons**: Pre-configured Buy, Sell, and Basket order buttons
+
+### Architecture
+- **Strategy Engine**: Core strategy execution and management system
+- **Condition Builder**: Visual interface for defining trading conditions
+- **Risk Calculator**: Automated risk assessment and position sizing
+- **Performance Analytics**: Comprehensive strategy performance metrics
+- **Fyers Service**: Backend service for Fyers API integration
+- **Order Management**: Automated order placement and tracking
+
+### Fyers API Connect Features
+- **OAuth2 Authentication**: Secure broker account connection
+- **Real-time Market Data**: Live quotes, charts, and market information
+- **Order Placement**: Buy, Sell, and Basket order execution
+- **Account Management**: Holdings, positions, and order history
+- **Custom Buttons**: Pre-configured order buttons for quick trading
+- **Token Management**: Automatic token refresh and session handling
+
+### API Endpoints
+- `POST /api/strategy/create` - Create new trading strategy
+- `GET /api/strategy/list` - List user strategies
+- `PUT /api/strategy/{id}` - Update strategy
+- `DELETE /api/strategy/{id}` - Delete strategy
+- `POST /api/strategy/{id}/toggle` - Toggle strategy status
+- `POST /api/strategy/{id}/execute` - Execute strategy
+- `GET /api/strategy/templates` - Get strategy templates
+- `GET /api/strategy/categories` - Get strategy categories
+
 ## 🔧 Development
 
 ### Running in Development Mode
@@ -380,7 +418,7 @@ For support and questions:
 - [ ] Enhanced real-time WebSocket market data
 - [ ] Advanced charting with TradingView integration
 - [ ] Mobile app (React Native)
-- [ ] Algorithmic trading strategies
+- [x] Algorithmic trading strategies
 - [ ] Social trading features
 - [ ] Advanced portfolio analytics
 - [ ] Multi-currency support

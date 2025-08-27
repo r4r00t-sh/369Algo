@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from config import settings
 from database import init_database, check_database_health
-from routers import auth, trading, portfolio, market_data, watchlist, settings as settings_router, broker, news
+from routers import auth, trading, portfolio, market_data, watchlist, settings as settings_router, broker, news, strategy, live_news
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -59,6 +59,8 @@ app.include_router(watchlist.router, prefix="/api/watchlist", tags=["Watchlist"]
 app.include_router(settings_router.router, prefix="/api/settings", tags=["Settings"])
 app.include_router(broker.router, prefix="/api/broker", tags=["Broker"])
 app.include_router(news.router, prefix="/api/news", tags=["Financial News"])
+app.include_router(strategy.router, prefix="/api/strategy", tags=["Trading Strategies"])
+app.include_router(live_news.router, prefix="/api/live-news", tags=["Live News"])
 
 # Health check endpoint
 @app.get("/health")

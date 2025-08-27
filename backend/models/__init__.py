@@ -7,6 +7,7 @@ from .portfolio import Portfolio
 from .trade import Trade
 from .watchlist import Watchlist
 from .market_data import MarketData, StockQuote, MarketIndex, NewsArticle
+from .strategy import Strategy, StrategyTrade, StrategyBacktest
 
 __all__ = [
     "User", 
@@ -17,5 +18,8 @@ __all__ = [
     "MarketData",
     "StockQuote", 
     "MarketIndex",
-    "NewsArticle"
+    "NewsArticle",
+    "Strategy",
+    "StrategyTrade",
+    "StrategyBacktest"
 ]
