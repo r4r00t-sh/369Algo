@@ -104,51 +104,72 @@ export const lightTheme = {
 
 export const darkTheme = {
   colors: {
-    // Fyers dark theme colors
-    primary: '#3b82f6',
-    primaryHover: '#60a5fa',
+    // Fyers dark theme colors - exact match
+    primary: '#6366f1', // Purple accent from the image
+    primaryHover: '#4f46e5',
     secondary: '#94a3b8',
-    success: '#22c55e',
-    warning: '#fbbf24',
-    error: '#f87171',
-    info: '#60a5fa',
+    success: '#10b981', // Green for profits
+    warning: '#f59e0b', // Orange for warnings
+    error: '#ef4444', // Red for losses
+    info: '#3b82f6',
     
-    // Fyers dark dashboard colors
-    background: '#0f172a',
-    surface: '#1e293b',
-    surfaceHover: '#334155',
-    surfaceBorder: '#475569',
-    cardBackground: '#1e293b',
+    // Fyers dark dashboard colors - exact match
+    background: '#000000', // Pure black background
+    surface: '#0a0a0a', // Very dark surface
+    surfaceHover: '#1a1a1a',
+    surfaceBorder: '#1f1f1f',
+    cardBackground: '#0a0a0a',
     
-    text: '#f8fafc',
-    textSecondary: '#cbd5e1',
-    textMuted: '#64748b',
+    text: '#ffffff', // Pure white text
+    textSecondary: '#e5e5e5', // Light grey text
+    textMuted: '#a3a3a3', // Muted text
     
     white: '#ffffff',
     black: '#000000',
     
     // Trading specific colors - Fyers dark style
-    positive: '#22c55e',
-    negative: '#f87171',
+    positive: '#10b981', // Green for profits
+    negative: '#ef4444', // Red for losses
     neutral: '#94a3b8',
     
     // Chart colors - Fyers dark style
-    chartLine: '#3b82f6',
-    chartArea: 'rgba(59, 130, 246, 0.1)',
-    chartGrid: '#334155',
+    chartLine: '#6366f1',
+    chartArea: 'rgba(99, 102, 241, 0.1)',
+    chartGrid: '#1f1f1f',
     
     // Fyers specific colors
-    fyersBlue: '#3b82f6',
-    fyersDarkBlue: '#1e40af',
-    fyersLightBlue: '#60a5fa',
+    fyersBlue: '#6366f1',
+    fyersDarkBlue: '#4f46e5',
+    fyersLightBlue: '#818cf8',
     fyersAccent: '#06b6d4',
+    
+    // Navigation and UI specific colors
+    navActive: '#6366f1', // Purple for active nav
+    navInactive: '#64748b',
+    navBackground: '#000000',
+    
+    // Table and data colors
+    tableHeader: '#0a0a0a',
+    tableRow: '#000000',
+    tableBorder: '#1f1f1f',
+    
+    // Status colors
+    statusActive: '#10b981',
+    statusPending: '#f59e0b',
+    statusInactive: '#64748b',
+    
+    // Button colors
+    buttonPrimary: '#6366f1',
+    buttonSecondary: '#1f1f1f',
+    buttonSuccess: '#10b981',
+    buttonDanger: '#ef4444',
   },
   
   shadows: {
-    small: '0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2)',
-    medium: '0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3)',
-    large: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3)',
-    card: '0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2)',
+    small: '0 1px 3px 0 rgba(0, 0, 0, 0.8), 0 1px 2px 0 rgba(0, 0, 0, 0.7)',
+    medium: '0 4px 6px -1px rgba(0, 0, 0, 0.9), 0 2px 4px -1px rgba(0, 0, 0, 0.8)',
+    large: '0 10px 15px -3px rgba(0, 0, 0, 0.9), 0 4px 6px -2px rgba(0, 0, 0, 0.8)',
+    card: '0 1px 3px 0 rgba(0, 0, 0, 0.8), 0 1px 2px 0 rgba(0, 0, 0, 0.7)',
   },
   
   borderRadius: {
@@ -206,6 +227,124 @@ export const darkTheme = {
 
 export type Theme = typeof lightTheme;
 export type ThemeColors = typeof lightTheme.colors;
+
+// Dark theme matching the trading platform image
+export const darkTradingTheme = {
+  colors: {
+    // Primary colors matching the image
+    primary: '#22c55e', // Green accent from the image
+    primaryHover: '#16a34a',
+    secondary: '#64748b',
+    success: '#22c55e', // Green for profits
+    warning: '#f59e0b', // Orange for warnings
+    error: '#ef4444', // Red for losses
+    info: '#3b82f6',
+    
+    // Dark background colors matching the image
+    background: '#0f0f0f', // Very dark background
+    surface: '#1a1a1a', // Dark surface
+    surfaceHover: '#2a2a2a',
+    surfaceBorder: '#333333',
+    cardBackground: '#1a1a1a',
+    
+    // Text colors matching the image
+    text: '#ffffff', // White text
+    textSecondary: '#e5e5e5', // Light grey text
+    textMuted: '#a3a3a3', // Muted text
+    
+    white: '#ffffff',
+    black: '#000000',
+    
+    // Trading specific colors matching the image
+    positive: '#22c55e', // Green for profits (like NIFTY Realty +16.80)
+    negative: '#ef4444', // Red for losses (like Nifty Next 50 -62.10)
+    neutral: '#94a3b8',
+    
+    // Chart colors
+    chartLine: '#22c55e',
+    chartArea: 'rgba(34, 197, 94, 0.1)',
+    chartGrid: '#333333',
+    
+    // Navigation colors
+    navActive: '#22c55e', // Green for active nav items
+    navInactive: '#64748b',
+    
+    // Table colors
+    tableHeader: '#1a1a1a',
+    tableRow: '#0f0f0f',
+    tableBorder: '#333333',
+    
+    // Status colors
+    statusActive: '#22c55e',
+    statusPending: '#f59e0b',
+    statusInactive: '#64748b',
+    
+    // Fyers specific colors (required for compatibility)
+    fyersBlue: '#22c55e',
+    fyersDarkBlue: '#16a34a',
+    fyersLightBlue: '#4ade80',
+    fyersAccent: '#06b6d4',
+  },
+  
+  shadows: {
+    small: '0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px 0 rgba(0, 0, 0, 0.4)',
+    medium: '0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -1px rgba(0, 0, 0, 0.5)',
+    large: '0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.5)',
+    card: '0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px 0 rgba(0, 0, 0, 0.4)',
+  },
+  
+  borderRadius: {
+    small: '6px',
+    medium: '8px',
+    large: '12px',
+    round: '50%',
+  },
+  
+  spacing: {
+    xs: '4px',
+    sm: '8px',
+    md: '16px',
+    lg: '24px',
+    xl: '32px',
+    xxl: '48px',
+  },
+  
+  typography: {
+    fontSizes: {
+      xs: '11px',
+      sm: '13px',
+      md: '14px',
+      lg: '16px',
+      xl: '18px',
+      xxl: '20px',
+      xxxl: '24px',
+    },
+    fontWeights: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700,
+    },
+    lineHeights: {
+      tight: 1.2,
+      normal: 1.4,
+      relaxed: 1.6,
+    },
+  },
+  
+  breakpoints: {
+    mobile: '480px',
+    tablet: '768px',
+    desktop: '1024px',
+    wide: '1280px',
+  },
+  
+  transitions: {
+    fast: '0.15s ease',
+    normal: '0.3s ease',
+    slow: '0.5s ease',
+  },
+};
 
 // Extend the DefaultTheme interface for styled-components
 declare module 'styled-components' {

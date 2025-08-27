@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { getAPIURL } from '../config/endpoints';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = getAPIURL(''); // Get base URL from centralized config
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

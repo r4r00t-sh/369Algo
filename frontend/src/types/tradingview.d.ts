@@ -1,12 +1,13 @@
 declare global {
   interface Window {
     TradingView: {
-      widget: new (config: TradingViewWidgetConfig) => any;
+      widget: new (config: any) => any;
     };
+    Fyers: any;
   }
   
   const TradingView: {
-    widget: new (config: TradingViewWidgetConfig) => any;
+    widget: new (config: any) => any;
   };
 }
 

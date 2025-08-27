@@ -59,10 +59,7 @@ const Settings: React.FC = () => {
         Manage your account preferences and broker connections
       </p>
       
-      <BrokerConnection 
-        onConnect={handleBrokerConnect}
-        onDisconnect={handleBrokerDisconnect}
-      />
+      <BrokerConnection />
     </div>
   );
 };

@@ -1,358 +1,129 @@
 import React from 'react';
-import styled from 'styled-components';
 import { 
   FiTrendingUp, 
   FiTrendingDown, 
   FiDollarSign, 
-  FiPieChart,
+  FiBarChart,
   FiEye,
-  FiStar
+  FiPlus
 } from 'react-icons/fi';
-import TradingViewChart from '../components/common/TradingViewChart';
-
-const DashboardContainer = styled.div`
-  padding: ${({ theme }) => theme.spacing.lg};
-`;
-
-const DashboardHeader = styled.div`
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
-`;
-
-const Title = styled.h1`
-  font-size: ${({ theme }) => theme.typography.fontSizes.xxxl};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
-  color: ${({ theme }) => theme.colors.text};
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-`;
-
-const Subtitle = styled.p`
-  color: ${({ theme }) => theme.colors.textSecondary};
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-`;
-
-const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: ${({ theme }) => theme.spacing.lg};
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
-`;
-
-const StatCard = styled.div`
-  background: ${({ theme }) => theme.colors.cardBackground};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  padding: ${({ theme }) => theme.spacing.lg};
-  box-shadow: ${({ theme }) => theme.shadows.card};
-`;
-
-const StatHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: ${({ theme }) => theme.spacing.md};
-`;
-
-const StatTitle = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  color: ${({ theme }) => theme.colors.textSecondary};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-`;
-
-const StatIcon = styled.div<{ color: string }>`
-  width: 40px;
-  height: 40px;
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  background: ${({ color }) => color}20;
-  color: ${({ color }) => color};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`;
-
-const StatValue = styled.div`
-  font-size: ${({ theme }) => theme.typography.fontSizes.xxl};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
-  color: ${({ theme }) => theme.colors.text};
-  margin-bottom: ${({ theme }) => theme.spacing.xs};
-`;
-
-const StatChange = styled.div<{ isPositive: boolean }>`
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  color: ${({ theme, isPositive }) => isPositive ? theme.colors.positive : theme.colors.negative};
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.xs};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-`;
-
-const ChartsGrid = styled.div`
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: ${({ theme }) => theme.spacing.lg};
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
-  
-  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const ChartCard = styled.div`
-  background: ${({ theme }) => theme.colors.cardBackground};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  padding: ${({ theme }) => theme.spacing.lg};
-  box-shadow: ${({ theme }) => theme.shadows.card};
-`;
-
-const ChartHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-`;
-
-const ChartTitle = styled.h3`
-  font-size: ${({ theme }) => theme.typography.fontSizes.lg};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.semibold};
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const WatchlistGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: ${({ theme }) => theme.spacing.lg};
-`;
-
-const WatchlistCard = styled.div`
-  background: ${({ theme }) => theme.colors.cardBackground};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  padding: ${({ theme }) => theme.spacing.lg};
-  box-shadow: ${({ theme }) => theme.shadows.card};
-`;
-
-const WatchlistHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: ${({ theme }) => theme.spacing.md};
-`;
-
-const WatchlistTitle = styled.h3`
-  font-size: ${({ theme }) => theme.typography.fontSizes.lg};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.semibold};
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const StockItem = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: ${({ theme }) => theme.spacing.md} 0;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  
-  &:last-child {
-    border-bottom: none;
-  }
-`;
-
-const StockInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const StockSymbol = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const StockName = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
-const StockPrice = styled.div`
-  text-align: right;
-`;
-
-const PriceValue = styled.div`
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const PriceChange = styled.div<{ isPositive: boolean }>`
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  color: ${({ theme, isPositive }) => isPositive ? theme.colors.positive : theme.colors.negative};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-`;
-
-// Sample data
-const portfolioData = [
-  { name: 'Jan', value: 100000 },
-  { name: 'Feb', value: 105000 },
-  { name: 'Mar', value: 110000 },
-  { name: 'Apr', value: 108000 },
-  { name: 'May', value: 115000 },
-  { name: 'Jun', value: 120000 },
-];
-
-const marketData = [
-  { name: 'NIFTY', value: 19500, change: 0.8 },
-  { name: 'SENSEX', value: 64500, change: 1.2 },
-  { name: 'BANKNIFTY', value: 44500, change: -0.5 },
-];
-
-const watchlistData = [
-  { symbol: 'RELIANCE', name: 'Reliance Industries', price: 2450.50, change: 2.5 },
-  { symbol: 'TCS', name: 'Tata Consultancy', price: 3850.75, change: -1.2 },
-  { symbol: 'HDFC', name: 'HDFC Bank', price: 1650.25, change: 0.8 },
-  { symbol: 'INFY', name: 'Infosys', price: 1450.00, change: 1.5 },
-];
 
 const Dashboard: React.FC = () => {
+  const stats = [
+    { name: 'Total Portfolio Value', value: '₹12,45,678', change: '+12.5%', isPositive: true, icon: FiDollarSign },
+    { name: 'Today\'s P&L', value: '₹23,456', change: '+2.1%', isPositive: true, icon: FiTrendingUp },
+    { name: 'Total Holdings', value: '24', change: '+3', isPositive: true, icon: FiBarChart },
+    { name: 'Watchlist Items', value: '18', change: '+2', isPositive: true, icon: FiEye },
+  ];
+
+  const recentTrades = [
+    { symbol: 'RELIANCE', type: 'BUY', quantity: 100, price: '2,456.78', time: '10:30 AM' },
+    { symbol: 'TCS', type: 'SELL', quantity: 50, price: '3,234.56', time: '09:45 AM' },
+    { symbol: 'HDFC', type: 'BUY', quantity: 200, price: '1,678.90', time: '09:15 AM' },
+  ];
+
   return (
-    <DashboardContainer>
-      <DashboardHeader>
-        <Title>Dashboard</Title>
-        <Subtitle>Welcome back! Here's what's happening with your portfolio today.</Subtitle>
-      </DashboardHeader>
+    <div className="bg-background text-foreground min-h-screen p-6">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+        <p className="text-muted-foreground">Welcome back! Here's your trading overview.</p>
+      </div>
 
-      <StatsGrid>
-        <StatCard>
-          <StatHeader>
-            <StatTitle>Portfolio Value</StatTitle>
-            <StatIcon color="#1e40af">
-                              <FiPieChart />
-            </StatIcon>
-          </StatHeader>
-          <StatValue>₹12,45,000</StatValue>
-          <StatChange isPositive={true}>
-            <FiTrendingUp />
-            +₹45,000 (+3.8%)
-          </StatChange>
-        </StatCard>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {stats.map((stat, index) => (
+          <div key={index} className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">{stat.name}</p>
+                <p className="text-2xl font-bold text-foreground mt-1">{stat.value}</p>
+                <p className={`text-sm font-medium mt-1 ${stat.isPositive ? 'text-success' : 'text-destructive'}`}>
+                  {stat.change}
+                </p>
+              </div>
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <stat.icon className="w-6 h-6 text-primary" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        <StatCard>
-          <StatHeader>
-            <StatTitle>Today's P&L</StatTitle>
-                          <StatIcon color="#059669">
-                <FiTrendingUp />
-              </StatIcon>
-          </StatHeader>
-          <StatValue>₹12,500</StatValue>
-          <StatChange isPositive={true}>
-            <FiTrendingUp />
-            +₹2,500 (+25.0%)
-          </StatChange>
-        </StatCard>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Portfolio Overview */}
+        <div className="bg-card border border-border rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Portfolio Overview</h3>
+            <button className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+              <FiPlus className="w-4 h-4" />
+              Add Funds
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Cash Balance</span>
+              <span className="font-medium">₹45,678</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Invested Amount</span>
+              <span className="font-medium">₹12,00,000</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Available Margin</span>
+              <span className="font-medium">₹2,34,567</span>
+            </div>
+          </div>
+        </div>
 
-        <StatCard>
-          <StatHeader>
-            <StatTitle>Available Balance</StatTitle>
-            <StatIcon color="#06b6d4">
-              <FiDollarSign />
-            </StatIcon>
-          </StatHeader>
-          <StatValue>₹2,15,000</StatValue>
-          <StatChange isPositive={false}>
-            <FiTrendingDown />
-            -₹5,000 (-2.3%)
-          </StatChange>
-        </StatCard>
-
-        <StatCard>
-          <StatHeader>
-            <StatTitle>Active Positions</StatTitle>
-            <StatIcon color="#d97706">
-              <FiEye />
-            </StatIcon>
-          </StatHeader>
-          <StatValue>8</StatValue>
-          <StatChange isPositive={true}>
-            <FiTrendingUp />
-            +2 positions
-          </StatChange>
-        </StatCard>
-      </StatsGrid>
-
-      <ChartsGrid>
-        <ChartCard>
-          <ChartHeader>
-            <ChartTitle>Market Chart - NIFTY 50</ChartTitle>
-          </ChartHeader>
-          <TradingViewChart symbol="NIFTY 50" height={300} />
-        </ChartCard>
-
-        <ChartCard>
-          <ChartHeader>
-            <ChartTitle>Market Indices</ChartTitle>
-          </ChartHeader>
-          <div>
-            {marketData.map((index) => (
-              <div key={index.name} style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                padding: '12px 0',
-                borderBottom: '1px solid #e2e8f0'
-              }}>
+        {/* Recent Trades */}
+        <div className="bg-card border border-border rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Recent Trades</h3>
+          <div className="space-y-3">
+            {recentTrades.map((trade, index) => (
+              <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
                 <div>
-                  <div style={{ fontWeight: 600, color: '#0f172a' }}>{index.name}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>{index.value.toLocaleString()}</div>
+                  <div className="font-medium text-foreground">{trade.symbol}</div>
+                  <div className="text-sm text-muted-foreground">{trade.time}</div>
                 </div>
-                <div style={{ 
-                  color: index.change >= 0 ? '#059669' : '#dc2626',
-                  fontWeight: 500
-                }}>
-                  {index.change >= 0 ? '+' : ''}{index.change}%
+                <div className="text-right">
+                  <div className={`font-medium ${trade.type === 'BUY' ? 'text-success' : 'text-destructive'}`}>
+                    {trade.type}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {trade.quantity} @ ₹{trade.price}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </ChartCard>
-      </ChartsGrid>
+        </div>
+      </div>
 
-      <WatchlistGrid>
-        <WatchlistCard>
-          <WatchlistHeader>
-            <WatchlistTitle>Watchlist</WatchlistTitle>
-            <FiStar style={{ color: '#fbbf24', cursor: 'pointer' }} />
-          </WatchlistHeader>
-          {watchlistData.map((stock) => (
-            <StockItem key={stock.symbol}>
-              <StockInfo>
-                <StockSymbol>{stock.symbol}</StockSymbol>
-                <StockName>{stock.name}</StockName>
-              </StockInfo>
-              <StockPrice>
-                <PriceValue>₹{stock.price.toLocaleString()}</PriceValue>
-                <PriceChange isPositive={stock.change >= 0}>
-                  {stock.change >= 0 ? '+' : ''}{stock.change}%
-                </PriceChange>
-              </StockPrice>
-            </StockItem>
-          ))}
-        </WatchlistCard>
-
-        <WatchlistCard>
-          <WatchlistHeader>
-            <WatchlistTitle>Recent Trades</WatchlistTitle>
-          </WatchlistHeader>
-          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
-            <FiTrendingUp style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }} />
-            <div>No recent trades</div>
-            <div style={{ fontSize: '12px', marginTop: '8px' }}>Your trading activity will appear here</div>
-          </div>
-        </WatchlistCard>
-      </WatchlistGrid>
-    </DashboardContainer>
+      {/* Quick Actions */}
+      <div className="bg-card border border-border rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <button className="flex flex-col items-center gap-2 p-4 border border-border rounded-lg hover:bg-muted transition-colors">
+            <FiPlus className="w-6 h-6 text-primary" />
+            <span className="text-sm font-medium">New Order</span>
+          </button>
+          <button className="flex flex-col items-center gap-2 p-4 border border-border rounded-lg hover:bg-muted transition-colors">
+            <FiEye className="w-6 h-6 text-primary" />
+            <span className="text-sm font-medium">View Orders</span>
+          </button>
+          <button className="flex flex-col items-center gap-2 p-4 border border-border rounded-lg hover:bg-muted transition-colors">
+            <FiBarChart className="w-6 h-6 text-primary" />
+            <span className="text-sm font-medium">Analytics</span>
+          </button>
+          <button className="flex flex-col items-center gap-2 p-4 border border-border rounded-lg hover:bg-muted transition-colors">
+            <FiTrendingUp className="w-6 h-6 text-primary" />
+            <span className="text-sm font-medium">Strategies</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

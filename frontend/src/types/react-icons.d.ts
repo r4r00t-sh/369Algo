@@ -32,4 +32,5 @@ declare module 'react-icons/fi' {
   export const FiTrash2: ComponentType<any>;
   export const FiSun: ComponentType<any>;
   export const FiMoon: ComponentType<any>;
+  export const FiZap: ComponentType<any>;
 }

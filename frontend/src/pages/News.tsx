@@ -1,842 +1,202 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import styled from 'styled-components';
-import { FiSearch, FiTrendingUp, FiClock, FiStar, FiRefreshCw, FiFilter } from 'react-icons/fi';
-import { useAuth } from '../contexts/AuthContext';
-import { api } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { FiClock, FiTrendingUp, FiTrendingDown, FiCheck } from 'react-icons/fi';
 
-interface NewsArticle {
+interface NewsItem {
+  id: number;
   title: string;
-  description: string;
-  url: string;
+  summary: string;
   source: string;
   publishedAt: string;
-  urlToImage?: string;
+  url: string;
+  sentiment: 'positive' | 'negative' | 'neutral';
   category: string;
-  sentiment: string;
-  relevance_score: number;
 }
-
-interface NewsCategory {
-  [key: string]: string;
-}
-
-const NewsContainer = styled.div`
-  padding: ${({ theme }) => theme.spacing.xl};
-  margin-left: 240px;
-  min-height: 100vh;
-  background: ${({ theme }) => theme.colors.background};
-`;
-
-const Header = styled.div`
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-`;
-
-const HeaderContent = styled.div`
-  flex: 1;
-`;
-
-const Title = styled.h1`
-  font-size: ${({ theme }) => theme.typography.fontSizes.xxl};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
-  color: ${({ theme }) => theme.colors.text};
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-`;
-
-const Subtitle = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSizes.lg};
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
-const SearchSection = styled.div`
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
-`;
-
-const SearchContainer = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing.md};
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-`;
-
-const SearchInput = styled.input`
-  flex: 1;
-  padding: ${({ theme }) => theme.spacing.md};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
-  
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
-const SearchButton = styled.button`
-  padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.lg};
-  background: ${({ theme }) => theme.colors.primary};
-  color: white;
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primaryHover};
-  }
-`;
-
-const CategoryTabs = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing.sm};
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-  overflow-x: auto;
-  padding-bottom: ${({ theme }) => theme.spacing.sm};
-`;
-
-const CategoryTab = styled.button<{ active: boolean }>`
-  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
-  background: ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surface};
-  color: ${({ active, theme }) => active ? 'white' : theme.colors.textSecondary};
-  border: 1px solid ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  white-space: nowrap;
-  
-  &:hover {
-    background: ${({ active, theme }) => active ? theme.colors.primaryHover : theme.colors.surfaceHover};
-  }
-`;
-
-const FilterContainer = styled.div`
-  position: relative;
-  display: inline-block;
-`;
-
-const FilterButton = styled.button<{ active: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.xs};
-  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
-  background: ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surface};
-  color: ${({ active, theme }) => active ? 'white' : theme.colors.textSecondary};
-  border: 1px solid ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  
-  &:hover {
-    background: ${({ active, theme }) => active ? theme.colors.primaryHover : theme.colors.surfaceHover};
-  }
-`;
-
-const FilterPopup = styled.div<{ isOpen: boolean }>`
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: ${({ theme }) => theme.spacing.xs};
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  padding: ${({ theme }) => theme.spacing.md};
-  min-width: 200px;
-  z-index: 1000;
-  opacity: ${({ isOpen }) => isOpen ? 1 : 0};
-  visibility: ${({ isOpen }) => isOpen ? 'visible' : 'hidden'};
-  transform: ${({ isOpen }) => isOpen ? 'translateY(0)' : 'translateY(-10px)'};
-  transition: all ${({ theme }) => theme.transitions.fast};
-`;
-
-const FilterTitle = styled.h4`
-  margin: 0 0 ${({ theme }) => theme.spacing.sm} 0;
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const FilterOption = styled.label`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  padding: ${({ theme }) => theme.spacing.xs} 0;
-  cursor: pointer;
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  color: ${({ theme }) => theme.colors.textSecondary};
-  
-  &:hover {
-    color: ${({ theme }) => theme.colors.text};
-  }
-`;
-
-const FilterCheckbox = styled.input`
-  margin: 0;
-  cursor: pointer;
-`;
-
-const FilterCount = styled.span`
-  margin-left: auto;
-  font-size: ${({ theme }) => theme.typography.fontSizes.xs};
-  color: ${({ theme }) => theme.colors.textMuted};
-  background: ${({ theme }) => theme.colors.surfaceBorder};
-  padding: 2px 6px;
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-`;
-
-const NewsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: ${({ theme }) => theme.spacing.lg};
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-  
-  @media (min-width: 1200px) {
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  }
-  
-  @media (min-width: 1600px) {
-    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-  }
-`;
-
-const NewsCard = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  padding: ${({ theme }) => theme.spacing.lg};
-  transition: all ${({ theme }) => theme.transitions.fast};
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  }
-`;
-
-const NewsHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: ${({ theme }) => theme.spacing.md};
-`;
-
-const NewsTitle = styled.h3`
-  font-size: ${({ theme }) => theme.typography.fontSizes.lg};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
-  color: ${({ theme }) => theme.colors.text};
-  margin: 0;
-  line-height: 1.4;
-  flex: 1;
-  margin-right: ${({ theme }) => theme.spacing.md};
-`;
-
-const NewsMeta = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  margin-bottom: ${({ theme }) => theme.spacing.md};
-`;
-
-const Source = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  color: ${({ theme }) => theme.colors.primary};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-`;
-
-const Time = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  color: ${({ theme }) => theme.colors.textMuted};
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.xs};
-`;
-
-const Sentiment = styled.span<{ sentiment: string }>`
-  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  font-size: ${({ theme }) => theme.typography.fontSizes.xs};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  background: ${({ sentiment, theme }) => {
-    switch (sentiment) {
-      case 'positive': return theme.colors.success + '20';
-      case 'negative': return theme.colors.error + '20';
-      default: return theme.colors.warning + '20';
-    }
-  }};
-  color: ${({ sentiment, theme }) => {
-    switch (sentiment) {
-      case 'positive': return theme.colors.success;
-      case 'negative': return theme.colors.error;
-      default: return theme.colors.warning;
-    }
-  }};
-`;
-
-const NewsDescription = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-  color: ${({ theme }) => theme.colors.textSecondary};
-  line-height: 1.6;
-  margin-bottom: ${({ theme }) => theme.spacing.md};
-`;
-
-const NewsActions = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const ReadMoreButton = styled.a`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.xs};
-  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
-  background: ${({ theme }) => theme.colors.primary};
-  color: white;
-  text-decoration: none;
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  transition: all ${({ theme }) => theme.transitions.fast};
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primaryHover};
-  }
-`;
-
-const RelevanceScore = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.xs};
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  color: ${({ theme }) => theme.colors.textMuted};
-`;
-
-const LoadingSpinner = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: ${({ theme }) => theme.spacing.xxl};
-  color: ${({ theme }) => theme.colors.textMuted};
-`;
-
-const ErrorMessage = styled.div`
-  text-align: center;
-  padding: ${({ theme }) => theme.spacing.xl};
-  color: ${({ theme }) => theme.colors.error};
-`;
-
-const RefreshButton = styled.button`
-  padding: ${({ theme }) => theme.spacing.md};
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  color: ${({ theme }) => theme.colors.textSecondary};
-  flex-shrink: 0;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.surfaceHover};
-    border-color: ${({ theme }) => theme.colors.surfaceBorder};
-    color: ${({ theme }) => theme.colors.text};
-  }
-`;
-
-const LoadMoreContainer = styled.div`
-  text-align: center;
-  padding: ${({ theme }) => theme.spacing.lg};
-  margin-top: ${({ theme }) => theme.spacing.lg};
-`;
-
-const LoadMoreButton = styled.button`
-  padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.lg};
-  background: ${({ theme }) => theme.colors.primary};
-  color: white;
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primaryHover};
-  }
-`;
-
-const PaginationContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: ${({ theme }) => theme.spacing.lg};
-  padding: ${({ theme }) => theme.spacing.md};
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-`;
-
-const PaginationInfo = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
-const PaginationControls = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing.xs};
-`;
-
-const PaginationButton = styled.button<{ active?: boolean }>`
-  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
-  background: ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surface};
-  color: ${({ active, theme }) => active ? 'white' : theme.colors.text};
-  border: 1px solid ${({ active, theme }) => active ? theme.colors.primary : theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  white-space: nowrap;
-  
-  &:hover {
-    background: ${({ active, theme }) => active ? theme.colors.primaryHover : theme.colors.surfaceHover};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
 
 const News: React.FC = () => {
-  const { user } = useAuth();
-  const [news, setNews] = useState<NewsArticle[]>([]);
-  const [categories, setCategories] = useState<NewsCategory>({});
-  const [selectedCategory, setSelectedCategory] = useState<string>('business');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
-  const [hasMore, setHasMore] = useState<boolean>(true);
-  const [currentLimit, setCurrentLimit] = useState<number>(50);
-  
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [articlesPerPage] = useState<number>(12);
-  
-  // Sentiment filtering
-  const [selectedSentiments, setSelectedSentiments] = useState<string[]>(['all']);
-  const [availableSentiments] = useState<string[]>(['all', 'positive', 'neutral', 'negative']);
-  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
-  const filterRef = useRef<HTMLDivElement>(null);
-
-  // Default categories if API fails
-  const defaultCategories = {
-    'business': 'Business & Finance',
-    'markets': 'Stock Markets',
-    'indian-markets': 'Indian Markets (NSE/BSE)',
-    'global-markets': 'Global Markets',
-    'economy': 'Economy & Policy',
-    'technology': 'Technology & Innovation',
-    'crypto': 'Cryptocurrency',
-    'commodities': 'Commodities & Oil'
-  };
-
-  // Memoized filtered and paginated news calculation
-  const { currentPageNews, totalFiltered, calculatedTotalPages } = useMemo(() => {
-    let filteredNews = news;
-    
-    // Apply sentiment filter
-    if (!selectedSentiments.includes('all')) {
-      filteredNews = news.filter(article => selectedSentiments.includes(article.sentiment));
-    }
-    
-    // Calculate pagination
-    const totalFiltered = filteredNews.length;
-    const calculatedTotalPages = Math.ceil(totalFiltered / articlesPerPage);
-    
-    // Get current page articles
-    const startIndex = (currentPage - 1) * articlesPerPage;
-    const endIndex = startIndex + articlesPerPage;
-    
-    return {
-      currentPageNews: filteredNews.slice(startIndex, endIndex),
-      totalFiltered,
-      calculatedTotalPages
-    };
-  }, [news, selectedSentiments, currentPage, articlesPerPage]);
-
-  // Update totalPages when calculatedTotalPages changes
-  useEffect(() => {
-    setTotalPages(calculatedTotalPages);
-  }, [calculatedTotalPages]);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
-    fetchCategories();
-    fetchNews(selectedCategory);
-  }, [selectedCategory]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await api.get('/api/news/categories');
-      setCategories(response.data.categories || defaultCategories);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      // Use default categories if API fails
-      setCategories(defaultCategories);
-      setError('Using default news categories');
-    }
-  };
-
-  const fetchNews = useCallback(async (category: string) => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      // Special handling for Indian markets
-      let endpoint = `/api/news/latest?category=${category}&limit=${currentLimit}`;
-      if (category === 'indian-markets') {
-        endpoint = `/api/news/indian-markets?limit=${currentLimit}`;
-      } else if (category === 'global-markets') {
-        endpoint = `/api/news/global-markets?limit=${currentLimit}`;
-      }
-      
-      const response = await api.get(endpoint);
-      setNews(response.data.news || response.data.news || []);
-      setHasMore(response.data.hasMore || false);
-    } catch (error) {
-      console.error('Error fetching news:', error);
-      setError('Failed to fetch news. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentLimit, selectedCategory]);
-
-  const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) return;
-    
-    try {
-      setLoading(true);
-      setError('');
-      const response = await api.get(`/api/news/search?query=${encodeURIComponent(searchQuery)}&category=${selectedCategory}&limit=${currentLimit}`);
-      setNews(response.data.news);
-      setHasMore(response.data.hasMore || false);
-    } catch (error) {
-      console.error('Error searching news:', error);
-      setError('Failed to search news');
-    } finally {
-      setLoading(false);
-    }
-  }, [searchQuery, selectedCategory, currentLimit]);
-
-  const handleCategoryChange = useCallback((category: string) => {
-    setSelectedCategory(category);
-    setSearchQuery('');
-    setCurrentLimit(50); // Reset limit when category changes
-    setHasMore(true); // Reset hasMore when category changes
-    setCurrentPage(1); // Reset to first page
-    setSelectedSentiments(['all']); // Reset sentiment filter
+    // Simulate loading news data
+    setTimeout(() => {
+      const mockNews: NewsItem[] = [
+        {
+          id: 1,
+          title: "NIFTY 50 Hits New All-Time High Amid Strong Corporate Earnings",
+          summary: "The benchmark index surged to record levels as major companies reported better-than-expected quarterly results, boosting investor confidence.",
+          source: "Economic Times",
+          publishedAt: "2 hours ago",
+          url: "#",
+          sentiment: "positive",
+          category: "markets"
+        },
+        {
+          id: 2,
+          title: "RBI Maintains Repo Rate at 6.5% in Latest Monetary Policy Review",
+          summary: "The central bank kept the key interest rate unchanged for the sixth consecutive time, signaling a cautious approach to inflation management.",
+          source: "Business Standard",
+          publishedAt: "4 hours ago",
+          url: "#",
+          sentiment: "neutral",
+          category: "economy"
+        },
+        {
+          id: 3,
+          title: "Tech Stocks Face Pressure as Global Markets React to Fed Comments",
+          summary: "Indian technology shares declined following negative cues from US markets after Federal Reserve officials signaled potential rate hikes.",
+          source: "Money Control",
+          publishedAt: "6 hours ago",
+          url: "#",
+          sentiment: "negative",
+          category: "markets"
+        },
+        {
+          id: 4,
+          title: "Oil Prices Surge on Supply Concerns and Geopolitical Tensions",
+          summary: "Crude oil prices jumped 3% as concerns over supply disruptions and escalating tensions in key oil-producing regions weighed on markets.",
+          source: "Reuters",
+          publishedAt: "8 hours ago",
+          url: "#",
+          sentiment: "negative",
+          category: "commodities"
+        },
+        {
+          id: 5,
+          title: "Banking Sector Shows Strong Growth with Improved Asset Quality",
+          summary: "Major banks reported robust quarterly performance with declining NPAs and improved credit growth across retail and corporate segments.",
+          source: "Financial Express",
+          publishedAt: "10 hours ago",
+          url: "#",
+          sentiment: "positive",
+          category: "banking"
+        }
+      ];
+      setNews(mockNews);
+        setLoading(false);
+    }, 1000);
   }, []);
 
-  const handleRefresh = useCallback(() => {
-    setError('');
-    fetchNews(selectedCategory);
-  }, [selectedCategory]);
+  const categories = [
+    { id: 'all', name: 'All News', count: news.length },
+    { id: 'markets', name: 'Markets', count: news.filter(n => n.category === 'markets').length },
+    { id: 'economy', name: 'Economy', count: news.filter(n => n.category === 'economy').length },
+    { id: 'banking', name: 'Banking', count: news.filter(n => n.category === 'banking').length },
+    { id: 'commodities', name: 'Commodities', count: news.filter(n => n.category === 'commodities').length }
+  ];
 
-  const handleLoadMore = useCallback(async () => {
-    try {
-      setLoading(true);
-      const newLimit = currentLimit + 25;
-      setCurrentLimit(newLimit);
-      
-      let endpoint = `/api/news/latest?category=${selectedCategory}&limit=${newLimit}`;
-      if (selectedCategory === 'indian-markets') {
-        endpoint = `/api/news/indian-markets?limit=${newLimit}`;
-      } else if (selectedCategory === 'global-markets') {
-        endpoint = `/api/news/global-markets?limit=${newLimit}`;
-      }
-      
-      const response = await api.get(endpoint);
-      setNews(response.data.news || []);
-      setHasMore(response.data.hasMore || false);
-    } catch (error) {
-      console.error('Error loading more news:', error);
-      setError('Failed to load more news');
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedCategory, currentLimit]);
+  const filteredNews = selectedCategory === 'all' 
+    ? news 
+    : news.filter(item => item.category === selectedCategory);
 
-  const handleSentimentFilter = useCallback((sentiment: string) => {
-    setSelectedSentiments(prev => {
-      if (sentiment === 'all') {
-        return ['all'];
-      }
-      
-      if (prev.includes('all')) {
-        return [sentiment];
-      }
-      
-      if (prev.includes(sentiment)) {
-        const newSelection = prev.filter(s => s !== sentiment);
-        return newSelection.length === 0 ? ['all'] : newSelection;
-      } else {
-        return [...prev, sentiment];
-      }
-    });
-    setCurrentPage(1); // Reset to first page when filtering
-  }, []);
-
-  const toggleFilter = useCallback(() => {
-    setIsFilterOpen(prev => !prev);
-  }, []);
-
-  const closeFilter = useCallback(() => {
-    setIsFilterOpen(false);
-  }, []);
-
-  // Close filter when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
-        closeFilter();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [closeFilter]);
-
-  // Get sentiment counts
-  const getSentimentCounts = useCallback(() => {
-    const counts: { [key: string]: number } = {};
-    availableSentiments.forEach(sentiment => {
-      if (sentiment === 'all') {
-        counts[sentiment] = news.length;
-      } else {
-        counts[sentiment] = news.filter(article => article.sentiment === sentiment).length;
-      }
-    });
-    return counts;
-  }, [news, availableSentiments]);
-
-  const sentimentCounts = getSentimentCounts();
-
-  const formatTimeAgo = useCallback((publishedAt: string) => {
-    const now = new Date();
-    const published = new Date(publishedAt);
-    const diffInHours = Math.floor((now.getTime() - published.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays}d ago`;
-  }, []);
-
-  const getSentimentLabel = useCallback((sentiment: string) => {
+  const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
-      case 'positive': return 'Bullish';
-      case 'negative': return 'Bearish';
-      default: return 'Neutral';
+      case 'positive': return 'text-green-500';
+      case 'negative': return 'text-red-500';
+      default: return 'text-gray-500';
     }
-  }, []);
+  };
 
-  const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  const getSentimentIcon = (sentiment: string) => {
+    switch (sentiment) {
+      case 'positive': return <FiTrendingUp className="text-green-500" />;
+      case 'negative': return <FiTrendingDown className="text-red-500" />;
+      default: return <div className="w-4 h-4 bg-gray-300 rounded-full" />;
+    }
+  };
 
-  if (loading && news.length === 0) {
+  if (loading) {
     return (
-      <NewsContainer>
-        <Header>
-          <HeaderContent>
-            <Title>Financial News</Title>
-            <Subtitle>Stay updated with the latest market news and insights</Subtitle>
-          </HeaderContent>
-          <RefreshButton onClick={handleRefresh} title="Refresh news">
-            <FiRefreshCw />
-          </RefreshButton>
-        </Header>
-        <LoadingSpinner>Loading news...</LoadingSpinner>
-      </NewsContainer>
+      <div className="bg-background text-foreground min-h-screen p-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <NewsContainer>
-      <Header>
-        <HeaderContent>
-          <Title>Financial News</Title>
-          <Subtitle>Stay updated with the latest market news and insights</Subtitle>
-        </HeaderContent>
-        <RefreshButton onClick={handleRefresh} title="Refresh news">
-          <FiRefreshCw />
-        </RefreshButton>
-      </Header>
+    <div className="bg-background text-foreground min-h-screen p-6">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Market News</h1>
+          <p className="text-muted-foreground">Stay updated with the latest financial news and market insights</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground">Last updated: {new Date().toLocaleTimeString()}</span>
+            </div>
+        </div>
 
-      <SearchSection>
-        <SearchContainer>
-          <SearchInput
-            type="text"
-            placeholder="Search for news articles..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-          />
-          <SearchButton onClick={handleSearch}>
-            <FiSearch />
-          </SearchButton>
-        </SearchContainer>
-
-        <CategoryTabs>
-          {Object.entries(categories).map(([key, label]) => (
-            <CategoryTab
-              key={key}
-              active={selectedCategory === key}
-              onClick={() => handleCategoryChange(key)}
-            >
-              {label}
-            </CategoryTab>
-          ))}
-        </CategoryTabs>
-
-        <FilterContainer ref={filterRef}>
-          <FilterButton 
-            active={!selectedSentiments.includes('all')} 
-            onClick={toggleFilter}
+      {/* Category Filters */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        {categories.map((category) => (
+          <button
+            key={category.id}
+            onClick={() => setSelectedCategory(category.id)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              selectedCategory === category.id
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
           >
-            <FiFilter />
-            Filter
-            {!selectedSentiments.includes('all') && (
-              <FilterCount>{selectedSentiments.length}</FilterCount>
-            )}
-          </FilterButton>
-          
-          <FilterPopup isOpen={isFilterOpen}>
-            <FilterTitle>Filter by Sentiment</FilterTitle>
-            {availableSentiments.map((sentiment) => (
-              <FilterOption key={sentiment}>
-                <FilterCheckbox
-                  type="checkbox"
-                  checked={selectedSentiments.includes(sentiment)}
-                  onChange={() => handleSentimentFilter(sentiment)}
-                />
-                {sentiment === 'all' ? 'All Sentiments' : 
-                 sentiment === 'positive' ? 'Bullish' : 
-                 sentiment === 'negative' ? 'Bearish' : 'Neutral'}
-                <FilterCount>{sentimentCounts[sentiment]}</FilterCount>
-              </FilterOption>
-            ))}
-          </FilterPopup>
-        </FilterContainer>
-      </SearchSection>
+            {category.name} ({category.count})
+          </button>
+        ))}
+      </div>
 
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-
-      {loading && (
-        <LoadingSpinner>Loading news...</LoadingSpinner>
-      )}
-
-      {!loading && !error && (
-        <>
-          <NewsGrid>
-            {currentPageNews.map((article, index) => (
-              <NewsCard key={index}>
-                <NewsHeader>
-                  <NewsTitle>{article.title}</NewsTitle>
-                  <Sentiment sentiment={article.sentiment}>
-                    {getSentimentLabel(article.sentiment)}
-                  </Sentiment>
-                </NewsHeader>
-
-                <NewsMeta>
-                  <Source>{article.source}</Source>
-                  <Time>
-                    <FiClock />
-                    {formatTimeAgo(article.publishedAt)}
-                  </Time>
-                </NewsMeta>
-
-                <NewsDescription>{article.description}</NewsDescription>
-
-                <NewsActions>
-                  <ReadMoreButton href={article.url} target="_blank" rel="noopener noreferrer">
-                    <FiTrendingUp />
-                    Read More
-                  </ReadMoreButton>
-                  <RelevanceScore>
-                    <FiStar />
-                    {Math.round(article.relevance_score * 100)}%
-                  </RelevanceScore>
-                </NewsActions>
-              </NewsCard>
-            ))}
-          </NewsGrid>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <PaginationContainer>
-              <PaginationInfo>
-                Showing {((currentPage - 1) * articlesPerPage) + 1} - {Math.min(currentPage * articlesPerPage, totalFiltered)} of {totalFiltered} articles
-              </PaginationInfo>
-              <PaginationControls>
-                <PaginationButton 
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
+      {/* News Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredNews.map((item) => (
+          <div key={item.id} className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-3">
+                <span className="inline-block px-2 py-1 bg-muted text-xs font-medium rounded text-muted-foreground">
+                  {item.category}
+                </span>
+                <div className="flex items-center gap-2">
+                  {getSentimentIcon(item.sentiment)}
+                </div>
+              </div>
+              
+              <h3 className="text-lg font-semibold text-foreground mb-3 line-clamp-2">
+                {item.title}
+              </h3>
+              
+              <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+                {item.summary}
+              </p>
+              
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
+                <span className="flex items-center gap-1">
+                  <FiClock size={14} />
+                  {item.publishedAt}
+                </span>
+                <span>{item.source}</span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className={`text-sm font-medium ${getSentimentColor(item.sentiment)}`}>
+                  {item.sentiment.charAt(0).toUpperCase() + item.sentiment.slice(1)}
+                </span>
+                <a
+                  href={item.url}
+                  className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm font-medium"
                 >
-                  Previous
-                </PaginationButton>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <PaginationButton
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    active={currentPage === page}
-                  >
-                    {page}
-                  </PaginationButton>
-                ))}
-                
-                <PaginationButton 
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </PaginationButton>
-              </PaginationControls>
-            </PaginationContainer>
-          )}
-        </>
-      )}
+                  Read More
+                  <FiCheck size={14} />
+                </a>
+              </div>
+              </div>
+            </div>
+        ))}
+            </div>
 
-      {!loading && !error && hasMore && (
-        <LoadMoreContainer>
-          <LoadMoreButton onClick={handleLoadMore}>
-            Load More News
-          </LoadMoreButton>
-        </LoadMoreContainer>
-      )}
-
-      {!loading && !error && news.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-          No news articles found. Try adjusting your search or category selection.
+      {filteredNews.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No news found for the selected category.</p>
         </div>
       )}
-    </NewsContainer>
+    </div>
   );
 };
 

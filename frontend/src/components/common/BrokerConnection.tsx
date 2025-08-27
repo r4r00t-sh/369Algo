@@ -1,422 +1,118 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
-import { FiCheck, FiX, FiPlus } from 'react-icons/fi';
+import { FiZap, FiCheck, FiX, FiSettings } from 'react-icons/fi';
 
-interface BrokerConnectionProps {
-  onConnect: (brokerData: any) => void;
-  onDisconnect: (brokerId: number) => void;
-}
-
-const Container = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  padding: ${({ theme }) => theme.spacing.lg};
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-`;
-
-const Title = styled.h3`
-  font-size: ${({ theme }) => theme.typography.fontSizes.lg};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.semibold};
-  color: ${({ theme }) => theme.colors.text};
-  margin-bottom: ${({ theme }) => theme.spacing.md};
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-`;
-
-const BrokerGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: ${({ theme }) => theme.spacing.md};
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-`;
-
-const BrokerCard = styled.div<{ isConnected: boolean }>`
-  background: ${({ theme, isConnected }) => 
-    isConnected ? theme.colors.success + '10' : theme.colors.surface};
-  border: 1px solid ${({ theme, isConnected }) => 
-    isConnected ? theme.colors.success : theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  padding: ${({ theme }) => theme.spacing.md};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${({ theme }) => theme.shadows.medium};
-  }
-`;
-
-const BrokerHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-`;
-
-const BrokerName = styled.h4`
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.semibold};
-  color: ${({ theme }) => theme.colors.text};
-  margin: 0;
-`;
-
-const StatusBadge = styled.span<{ isConnected: boolean }>`
-  background: ${({ theme, isConnected }) => 
-    isConnected ? theme.colors.success : theme.colors.textMuted};
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
-
-const BrokerDescription = styled.p`
-  color: ${({ theme }) => theme.colors.textSecondary};
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  margin: 0 0 ${({ theme }) => theme.spacing.sm} 0;
-  line-height: 1.4;
-`;
-
-const BrokerFeatures = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-`;
-
-const FeatureTag = styled.span`
-  background: ${({ theme }) => theme.colors.surfaceHover};
-  color: ${({ theme }) => theme.colors.textSecondary};
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 500;
-`;
-
-const ActionButton = styled.button<{ variant: 'connect' | 'disconnect' }>`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
-  border: 1px solid ${({ theme, variant }) => 
-    variant === 'connect' ? theme.colors.primary : theme.colors.error};
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  background: ${({ theme, variant }) => 
-    variant === 'connect' ? theme.colors.primary : 'transparent'};
-  color: ${({ theme, variant }) => 
-    variant === 'connect' ? 'white' : theme.colors.error};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  font-weight: 500;
-  
-  &:hover {
-    background: ${({ theme, variant }) => 
-      variant === 'connect' ? theme.colors.primaryHover : theme.colors.error + '10'};
-    transform: translateY(-1px);
-  }
-`;
-
-const ConnectionForm = styled.div`
-  background: ${({ theme }) => theme.colors.cardBackground};
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  padding: ${({ theme }) => theme.spacing.lg};
-  margin-top: ${({ theme }) => theme.spacing.md};
-`;
-
-const FormTitle = styled.h4`
-  font-size: ${({ theme }) => theme.typography.fontSizes.md};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.semibold};
-  color: ${({ theme }) => theme.colors.text};
-  margin-bottom: ${({ theme }) => theme.spacing.md};
-`;
-
-const FormGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: ${({ theme }) => theme.spacing.md};
-  margin-bottom: ${({ theme }) => theme.spacing.md};
-  
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const Label = styled.label`
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const Input = styled.input`
-  padding: 8px 12px;
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.colors.primary};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.primary}20;
-  }
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing.sm};
-  justify-content: flex-end;
-`;
-
-const CancelButton = styled.button`
-  padding: 8px 16px;
-  border: 1px solid ${({ theme }) => theme.colors.surfaceBorder};
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.textSecondary};
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.surfaceHover};
-    border-color: ${({ theme }) => theme.colors.primary};
-    color: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
-const ConnectButton = styled.button`
-  padding: 8px 16px;
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  background: ${({ theme }) => theme.colors.primary};
-  color: white;
-  cursor: pointer;
-  transition: all ${({ theme }) => theme.transitions.fast};
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm};
-  font-weight: 500;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.primaryHover};
-    transform: translateY(-1px);
-  }
-  
-  &:disabled {
-    background: ${({ theme }) => theme.colors.textMuted};
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
-
-const brokers = [
-  {
-    name: 'zerodha',
-    displayName: 'Zerodha',
-    description: 'India\'s largest stock broker by retail equity volumes. Offers low-cost trading with advanced charting tools.',
-    website: 'https://zerodha.com',
-    apiDocs: 'https://kite.trade/docs/connect/v3/',
-    features: ['Equity', 'F&O', 'Currency', 'Commodity', 'MF'],
-    isConnected: false
-  },
-  {
-    name: 'angel_one',
-    displayName: 'Angel One',
-    description: 'Full-service broker offering research, advisory, and trading services across all market segments.',
-    website: 'https://angelone.in',
-    apiDocs: 'https://smartapi.angelbroking.com/',
-    features: ['Equity', 'F&O', 'Currency', 'Commodity', 'Research'],
-    isConnected: false
-  },
-  {
-    name: 'upstox',
-    displayName: 'Upstox',
-    description: 'Discount broker focused on technology-driven trading with competitive pricing and modern interface.',
-    website: 'https://upstox.com',
-    apiDocs: 'https://api-docs.upstox.com/',
-    features: ['Equity', 'F&O', 'Currency', 'Commodity'],
-    isConnected: false
-  }
-];
-
-const BrokerConnection: React.FC<BrokerConnectionProps> = ({ onConnect, onDisconnect }) => {
+const BrokerConnection: React.FC = () => {
   const [selectedBroker, setSelectedBroker] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    api_key: '',
-    api_secret: ''
-  });
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const handleBrokerSelect = (brokerName: string) => {
-    setSelectedBroker(brokerName);
-    setFormData({ api_key: '', api_secret: '' });
-  };
-
-  const handleConnect = async () => {
-    if (!selectedBroker || !formData.api_key || !formData.api_secret) {
-      return;
+  const brokers = [
+    {
+      id: 'fyers',
+      name: 'Fyers',
+      description: 'Connect to Fyers trading platform for real-time market data and order execution',
+      isConnected: true,
+      features: ['Real-time Data', 'Order Execution', 'Portfolio Management']
+    },
+    {
+      id: 'zerodha',
+      name: 'Zerodha',
+      description: 'Connect to Zerodha Kite platform for seamless trading experience',
+      isConnected: false,
+      features: ['Market Data', 'Trading', 'Analytics']
+    },
+    {
+      id: 'upstox',
+      name: 'Upstox',
+      description: 'Connect to Upstox for low-cost trading and advanced charting',
+      isConnected: false,
+      features: ['Low-cost Trading', 'Advanced Charts', 'Research']
     }
+  ];
 
+  const handleConnect = async (brokerId: string) => {
+    setSelectedBroker(brokerId);
     setIsConnecting(true);
-    try {
-      await onConnect({
-        broker_name: selectedBroker,
-        ...formData
-      });
-      setSelectedBroker(null);
-      setFormData({ api_key: '', api_secret: '' });
-    } catch (error) {
-      console.error('Failed to connect broker:', error);
-    } finally {
+    
+    // Simulate connection process
+    setTimeout(() => {
       setIsConnecting(false);
-    }
+    }, 2000);
   };
 
-  const handleCancel = () => {
-    setSelectedBroker(null);
-    setFormData({ api_key: '', api_secret: '' });
+  const handleDisconnect = (brokerId: string) => {
+    // Handle disconnection logic
+    console.log(`Disconnecting from ${brokerId}`);
   };
 
   return (
-    <Container>
-             <Title>
-         <FiPlus />
-         Connect Broker Account
-       </Title>
+    <div className="bg-card border border-border rounded-lg p-6">
+      <h3 className="text-xl font-semibold text-foreground mb-6">Broker Connections</h3>
       
-      <BrokerGrid>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {brokers.map((broker) => (
-          <BrokerCard 
-            key={broker.name}
-            isConnected={broker.isConnected}
-            onClick={() => handleBrokerSelect(broker.name)}
-          >
-            <BrokerHeader>
-              <BrokerName>{broker.displayName}</BrokerName>
-              <StatusBadge isConnected={broker.isConnected}>
-                {broker.isConnected ? (
-                  <>
-                    <FiCheck />
-                    Connected
-                  </>
-                                 ) : (
-                   <>
-                     <FiPlus />
-                     Not Connected
-                   </>
-                 )}
-              </StatusBadge>
-            </BrokerHeader>
-            
-            <BrokerDescription>{broker.description}</BrokerDescription>
-            
-            <BrokerFeatures>
-              {broker.features.map((feature) => (
-                <FeatureTag key={feature}>{feature}</FeatureTag>
-              ))}
-            </BrokerFeatures>
-            
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <ActionButton 
-                variant={broker.isConnected ? 'disconnect' : 'connect'}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (broker.isConnected) {
-                    // Handle disconnect
-                  } else {
-                    handleBrokerSelect(broker.name);
-                  }
-                }}
-              >
-                {broker.isConnected ? (
-                  <>
-                    <FiX />
-                    Disconnect
-                  </>
-                                 ) : (
-                   <>
-                     <FiPlus />
-                     Connect
-                   </>
-                 )}
-              </ActionButton>
-              
-              <ActionButton 
-                variant="connect"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(broker.website, '_blank');
-                }}
-              >
-                Visit
-              </ActionButton>
+          <div key={broker.id} className="bg-muted/30 border border-border rounded-lg p-4">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h4 className="text-lg font-semibold text-foreground">{broker.name}</h4>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                    broker.isConnected 
+                      ? 'text-green-500 bg-green-500/10' 
+                      : 'text-gray-500 bg-gray-500/10'
+                  }`}>
+                                         {broker.isConnected ? <FiCheck size={12} /> : <FiX size={12} />}
+                    {broker.isConnected ? 'Connected' : 'Disconnected'}
+                  </span>
+                </div>
+              </div>
+              <FiSettings className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" size={20} />
             </div>
-          </BrokerCard>
-        ))}
-      </BrokerGrid>
-
-      {selectedBroker && (
-        <ConnectionForm>
-          <FormTitle>Connect to {brokers.find(b => b.name === selectedBroker)?.displayName}</FormTitle>
-          
-          <FormGrid>
-            <FormGroup>
-              <Label>API Key</Label>
-              <Input
-                type="text"
-                placeholder="Enter your API key"
-                value={formData.api_key}
-                onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-              />
-            </FormGroup>
             
-            <FormGroup>
-              <Label>API Secret</Label>
-              <Input
-                type="password"
-                placeholder="Enter your API secret"
-                value={formData.api_secret}
-                onChange={(e) => setFormData({ ...formData, api_secret: e.target.value })}
-              />
-            </FormGroup>
-          </FormGrid>
-          
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
-              💡 <strong>How to get API credentials:</strong>
-            </p>
-            <ol style={{ fontSize: '12px', color: '#64748b', margin: '8px 0 0 16px', padding: 0 }}>
-              <li>Log in to your {brokers.find(b => b.name === selectedBroker)?.displayName} account</li>
-              <li>Go to API settings or developer section</li>
-              <li>Generate a new API key and secret</li>
-              <li>Copy and paste them here</li>
-            </ol>
+            <p className="text-sm text-muted-foreground mb-4">{broker.description}</p>
+            
+            <div className="mb-4">
+              <h5 className="text-sm font-medium text-foreground mb-2">Features:</h5>
+              <div className="flex flex-wrap gap-1">
+                {broker.features.map((feature, index) => (
+                  <span key={index} className="px-2 py-1 bg-primary/10 text-primary text-xs rounded">
+                    {feature}
+                  </span>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              {broker.isConnected ? (
+                <button
+                  onClick={() => handleDisconnect(broker.id)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleConnect(broker.id)}
+                  disabled={isConnecting && selectedBroker === broker.id}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isConnecting && selectedBroker === broker.id ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <FiZap size={16} />
+                      Connect
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
-          
-          <ButtonGroup>
-            <CancelButton onClick={handleCancel}>Cancel</CancelButton>
-            <ConnectButton 
-              onClick={handleConnect}
-              disabled={!formData.api_key || !formData.api_secret || isConnecting}
-            >
-              {isConnecting ? 'Connecting...' : 'Connect'}
-            </ConnectButton>
-          </ButtonGroup>
-        </ConnectionForm>
-      )}
-    </Container>
+        ))}
+      </div>
+    </div>
   );
 };
 
